@@ -16,43 +16,39 @@ export interface FreighterConnector {
 }
 
 /**
- * Check if Freighter is available by attempting to access it
- * This triggers the extension to inject if it hasn't already
+ * Check if Freighter is available
  */
 export async function isFreighterAvailable(): Promise<boolean> {
   if (typeof window === "undefined") {
     return false;
   }
 
-  // Method 1: Check window.freighterApi
-  if (window.freighterApi) {
-    console.log("✅ Freighter found via window.freighterApi");
-    return true;
-  }
-
-  // Method 2: Check window.stellar
-  if ((window as any).stellar) {
-    console.log("✅ Freighter found via window.stellar");
-    return true;
-  }
-
-  // Method 3: Dispatch custom event to trigger Freighter injection
-  // Some extensions only inject when they detect wallet-related activity
-  const event = new CustomEvent("freighter-request", {
-    detail: { type: "check-availability" },
-  });
-  window.dispatchEvent(event);
-
-  // Wait a bit for injection
-  await new Promise((resolve) => setTimeout(resolve, 300));
-
-  // Check again
   if (window.freighterApi || (window as any).stellar) {
-    console.log("✅ Freighter found after event dispatch");
     return true;
   }
 
-  console.log("❌ Freighter not available");
+  return false;
+}
+
+/**
+ * Aggressively trigger Freighter injection
+ * Called when user clicks Connect button
+ */
+async function triggerFreighterInjection(): Promise<boolean> {
+  // Dispatch multiple events to wake up Freighter
+  window.dispatchEvent(new CustomEvent("freighter-request"));
+  window.dispatchEvent(new CustomEvent("stellar-request"));
+  window.postMessage({ type: "FREIGHTER_API_REQUEST" }, "*");
+
+  // Wait up to 3 seconds with checks every 100ms
+  for (let i = 0; i < 30; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    if (window.freighterApi || (window as any).stellar) {
+      return true;
+    }
+  }
+
   return false;
 }
 
@@ -78,13 +74,11 @@ export async function requestFreighterAccess(): Promise<boolean> {
     const isAllowed = await freighter.isAllowed();
 
     if (!isAllowed) {
-      console.log("🔐 Requesting Freighter permission...");
       await freighter.setAllowed();
     }
 
     return true;
   } catch (error) {
-    console.error("Failed to request Freighter access:", error);
     throw error;
   }
 }
@@ -99,13 +93,8 @@ export async function getFreighterPublicKey(): Promise<string> {
     throw new Error("Freighter is not available");
   }
 
-  try {
-    const publicKey = await freighter.getPublicKey();
-    return publicKey;
-  } catch (error) {
-    console.error("Failed to get public key:", error);
-    throw error;
-  }
+  const publicKey = await freighter.getPublicKey();
+  return publicKey;
 }
 
 /**
@@ -118,13 +107,8 @@ export async function getFreighterNetwork(): Promise<string> {
     throw new Error("Freighter is not available");
   }
 
-  try {
-    const network = await freighter.getNetwork();
-    return network;
-  } catch (error) {
-    console.error("Failed to get network:", error);
-    throw error;
-  }
+  const network = await freighter.getNetwork();
+  return network;
 }
 
 /**
@@ -140,13 +124,8 @@ export async function signFreighterTransaction(
     throw new Error("Freighter is not available");
   }
 
-  try {
-    const signedXdr = await freighter.signTransaction(xdr, opts);
-    return signedXdr;
-  } catch (error) {
-    console.error("Failed to sign transaction:", error);
-    throw error;
-  }
+  const signedXdr = await freighter.signTransaction(xdr, opts);
+  return signedXdr;
 }
 
 /**
@@ -157,26 +136,32 @@ export async function connectFreighter(): Promise<{
   publicKey: string;
   network: string;
 }> {
-  console.log("🔗 Starting Freighter connection flow...");
+  // Step 1: Check if available, if not try to trigger injection
+  let available = await isFreighterAvailable();
 
-  // Step 1: Check if available
-  const available = await isFreighterAvailable();
+  if (!available) {
+    console.log("🔄 Triggering Freighter injection...");
+    available = await triggerFreighterInjection();
+  }
+
   if (!available) {
     throw new Error(
-      "Freighter wallet is not installed. Please install it from https://www.freighter.app/",
+      "Freighter wallet is not responding. Please ensure the extension is installed and enabled, then try again.",
     );
   }
+
+  console.log("✅ Freighter detected");
 
   // Step 2: Request access
   await requestFreighterAccess();
 
   // Step 3: Get public key
   const publicKey = await getFreighterPublicKey();
-  console.log("✅ Public key obtained:", publicKey.substring(0, 8) + "...");
 
   // Step 4: Get network
   const network = await getFreighterNetwork();
-  console.log("✅ Network:", network);
+
+  console.log("✅ Connected:", publicKey.substring(0, 8) + "...", network);
 
   return { publicKey, network };
 }

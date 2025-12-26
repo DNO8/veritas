@@ -34,8 +34,6 @@ export function useFreighter() {
 
     try {
       const available = await isFreighterAvailable();
-      console.log("🔍 Freighter availability check:", available);
-
       setState((prev) => ({
         ...prev,
         isInstalled: available,
@@ -43,7 +41,6 @@ export function useFreighter() {
       }));
       return available;
     } catch (error) {
-      console.error("Error checking Freighter:", error);
       setState((prev) => ({ ...prev, isInstalled: false, isLoading: false }));
       return false;
     }
@@ -51,8 +48,6 @@ export function useFreighter() {
 
   // Connect to Freighter wallet using connector
   const connect = useCallback(async () => {
-    console.log("🔗 Connecting to Freighter...");
-
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
@@ -67,15 +62,12 @@ export function useFreighter() {
         error: null,
       });
 
-      console.log("✅ Wallet connected successfully");
       return true;
     } catch (error) {
       const errorMessage =
         error instanceof Error
           ? error.message
           : "Failed to connect to Freighter";
-
-      console.error("❌ Connection error:", errorMessage);
 
       setState((prev) => ({
         ...prev,
@@ -125,10 +117,8 @@ export function useFreighter() {
   // Check connection on mount with multiple attempts
   useEffect(() => {
     let attempts = 0;
-    const maxAttempts = 10;
+    const maxAttempts = 5;
     let mounted = true;
-
-    console.log("🔄 Starting Freighter detection...");
 
     const checkWithRetry = async () => {
       if (!mounted) return;
@@ -137,13 +127,7 @@ export function useFreighter() {
 
       if (!installed && attempts < maxAttempts && mounted) {
         attempts++;
-        console.log(`  - Retry ${attempts}/${maxAttempts}...`);
-        setTimeout(checkWithRetry, 150);
-      } else if (!installed && mounted) {
-        console.log("⚠️ Freighter not detected after", maxAttempts, "attempts");
-        console.log("   User can click 'Connect' button to trigger connection");
-      } else if (mounted) {
-        console.log("✅ Freighter detected on page load");
+        setTimeout(checkWithRetry, 200);
       }
     };
 

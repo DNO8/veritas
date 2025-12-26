@@ -21,11 +21,20 @@ export default function SignupPage() {
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
     const locale = window.location.pathname.split("/")[1] || "es";
+    const redirectUrl = `${siteUrl}/${locale}/auth/callback`;
+
+    // Debug logs
+    console.log("🔍 OAuth Debug Info (Signup):");
+    console.log("  - NEXT_PUBLIC_SITE_URL:", process.env.NEXT_PUBLIC_SITE_URL);
+    console.log("  - window.location.origin:", window.location.origin);
+    console.log("  - siteUrl (final):", siteUrl);
+    console.log("  - locale:", locale);
+    console.log("  - redirectTo:", redirectUrl);
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${siteUrl}/${locale}/auth/callback`,
+        redirectTo: redirectUrl,
         queryParams: {
           access_type: "offline",
           prompt: "consent",

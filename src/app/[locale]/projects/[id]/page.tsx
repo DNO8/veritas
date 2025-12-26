@@ -9,6 +9,7 @@ import { useWallet } from "@/lib/hooks/WalletProvider";
 import { sendPayment } from "@/lib/stellar/payment";
 import { useProject } from "@/lib/hooks/useProject";
 import RecentDonations from "@/components/project/RecentDonations";
+import TopDonors from "@/components/project/TopDonors";
 
 export default function ProjectPage() {
   const params = useParams();
@@ -558,6 +559,8 @@ export default function ProjectPage() {
           wallet. No platform fees. Network: Testnet
         </p>
       </div>
+
+      <TopDonors donations={donations} limit={5} />
 
       <RecentDonations donations={donations} />
 

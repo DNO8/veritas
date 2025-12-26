@@ -8,6 +8,7 @@ import {
   WalletNetwork,
   allowAllModules,
   XBULL_ID,
+  ISupportedWallet,
 } from "@creit.tech/stellar-wallets-kit";
 import { WalletType, WalletConnection } from "./wallet-types";
 
@@ -43,27 +44,37 @@ export async function isXBullAvailable(): Promise<boolean> {
  * Connect to xBull wallet
  */
 export async function connectXBull(): Promise<WalletConnection> {
+  console.log(" [xBull] Starting connection...");
+
   try {
-    const kit = getWalletKit();
+    const kit = new StellarWalletsKit({
+      network: WalletNetwork.TESTNET,
+      selectedWalletId: XBULL_ID,
+      modules: allowAllModules(),
+    });
+    console.log(" [xBull] Kit initialized");
 
-    // Set wallet to xBull
-    await kit.setWallet(XBULL_ID);
+    console.log(" [xBull] Opening modal...");
+    await kit.openModal({
+      onWalletSelected: async (option: ISupportedWallet) => {
+        console.log(" [xBull] Wallet selected:", option.id);
+        kit.setWallet(option.id);
+      },
+    });
+    console.log(" [xBull] Modal closed");
 
-    // Get public key
+    console.log(" [xBull] Getting public key...");
     const { address } = await kit.getAddress();
+    console.log(" [xBull] Public key:", address.substring(0, 8) + "...");
 
-    if (!address) {
-      throw new Error("Failed to get public key from xBull");
-    }
-
-    console.log("✅ xBull connected:", address.substring(0, 8) + "...");
-
+    console.log(" [xBull] Connection complete");
     return {
       publicKey: address,
       network: "TESTNET",
       walletType: WalletType.XBULL,
     };
   } catch (error) {
+    console.error(" [xBull] Connection error:", error);
     if (error instanceof Error && error.message.includes("User closed modal")) {
       throw new Error("Connection canceled by user");
     }

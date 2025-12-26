@@ -585,7 +585,6 @@ export default function ProjectPage() {
             id="donationAsset"
             value={asset}
             onChange={(e) => setAsset(e.target.value as "XLM" | "USDC")}
-            disabled={!isConnected}
             style={{
               width: "100%",
               padding: "10px",
@@ -612,7 +611,6 @@ export default function ProjectPage() {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="10"
-            disabled={!isConnected}
             min="0.0000001"
             step="0.1"
             style={{

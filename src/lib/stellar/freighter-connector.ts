@@ -22,13 +22,27 @@ export interface FreighterConnector {
  */
 export async function isFreighterAvailable(): Promise<boolean> {
   if (typeof window === "undefined") {
+    console.log("🔍 [Freighter] Server-side, not available");
     return false;
   }
 
-  if (window.freighterApi || (window as any).stellar) {
+  const hasFreighterApi = !!window.freighterApi;
+  const hasStellar = !!(window as any).stellar;
+
+  console.log("🔍 [Freighter] Checking availability:");
+  console.log("  - window.freighterApi:", hasFreighterApi);
+  console.log("  - window.stellar:", hasStellar);
+
+  // Also check for the extension in a different way
+  const hasExtension = !!(window as any).freighter;
+  console.log("  - window.freighter:", hasExtension);
+
+  if (hasFreighterApi || hasStellar) {
+    console.log("✅ [Freighter] Available");
     return true;
   }
 
+  console.log("⚠️ [Freighter] Not immediately available");
   return false;
 }
 
@@ -37,20 +51,39 @@ export async function isFreighterAvailable(): Promise<boolean> {
  * Called when user clicks Connect button
  */
 async function triggerFreighterInjection(): Promise<boolean> {
+  console.log("🔄 [Freighter] Dispatching injection events...");
+
   // Dispatch multiple events to wake up Freighter
   window.dispatchEvent(new CustomEvent("freighter-request"));
   window.dispatchEvent(new CustomEvent("stellar-request"));
   window.postMessage({ type: "FREIGHTER_API_REQUEST" }, "*");
 
-  // Wait up to 3 seconds with checks every 100ms
-  for (let i = 0; i < 30; i++) {
-    await new Promise((resolve) => setTimeout(resolve, 100));
+  console.log("⏳ [Freighter] Waiting for injection (up to 5 seconds)...");
 
-    if (window.freighterApi || (window as any).stellar) {
+  // Wait up to 5 seconds with checks every 200ms
+  for (let i = 0; i < 25; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    const hasFreighterApi = !!window.freighterApi;
+    const hasStellar = !!(window as any).stellar;
+
+    if (i % 5 === 0) {
+      console.log(
+        `⏳ [Freighter] Check ${i + 1}/25 - freighterApi: ${hasFreighterApi}, stellar: ${hasStellar}`,
+      );
+    }
+
+    if (hasFreighterApi || hasStellar) {
+      console.log(
+        `✅ [Freighter] Injection successful after ${(i + 1) * 200}ms`,
+      );
       return true;
     }
   }
 
+  console.error(
+    "❌ [Freighter] Injection timeout - extension may not be installed",
+  );
   return false;
 }
 
@@ -139,32 +172,43 @@ export async function connectFreighter(): Promise<{
   network: string;
   walletType: WalletType;
 }> {
+  console.log("🔗 [Freighter] Starting connection...");
+
   // Step 1: Check if available, if not try to trigger injection
   let available = await isFreighterAvailable();
+  console.log("🔍 [Freighter] Initial availability:", available);
 
   if (!available) {
-    console.log("🔄 Triggering Freighter injection...");
+    console.log("🔄 [Freighter] Triggering injection...");
     available = await triggerFreighterInjection();
+    console.log("🔍 [Freighter] Availability after injection:", available);
   }
 
   if (!available) {
+    console.error("❌ [Freighter] Not available after all attempts");
     throw new Error(
       "Freighter wallet is not responding. Please ensure the extension is installed and enabled, then try again.",
     );
   }
 
-  console.log("✅ Freighter detected");
+  console.log("✅ [Freighter] Detected");
 
   // Step 2: Request access
+  console.log("🔐 [Freighter] Requesting access...");
   await requestFreighterAccess();
+  console.log("✅ [Freighter] Access granted");
 
   // Step 3: Get public key
+  console.log("🔑 [Freighter] Getting public key...");
   const publicKey = await getFreighterPublicKey();
+  console.log("✅ [Freighter] Public key:", publicKey.substring(0, 8) + "...");
 
   // Step 4: Get network
+  console.log("🌐 [Freighter] Getting network...");
   const network = await getFreighterNetwork();
+  console.log("✅ [Freighter] Network:", network);
 
-  console.log("✅ Connected:", publicKey.substring(0, 8) + "...", network);
+  console.log("✅ [Freighter] Connection complete");
 
   return { publicKey, network, walletType: WalletType.FREIGHTER };
 }

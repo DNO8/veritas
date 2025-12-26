@@ -1,93 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import type { Project } from "@/lib/supabase/types";
-import { supabase } from "@/lib/supabase/client";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import WalletConnect from "@/components/WalletConnect";
 import { useWallet } from "@/lib/hooks/WalletProvider";
 import { sendPayment } from "@/lib/stellar/payment";
-
-interface ProjectMedia {
-  id: string;
-  url: string;
-  type: string;
-  order_index: number;
-}
-
-interface RoadmapItem {
-  id: string;
-  project_id: string;
-  title: string;
-  description: string | null;
-  estimated_cost: string | null;
-  order_index: number;
-}
+import { useProject } from "@/lib/hooks/useProject";
+import RecentDonations from "@/components/project/RecentDonations";
 
 export default function ProjectPage() {
   const params = useParams();
   const router = useRouter();
-  const [project, setProject] = useState<Project | null>(null);
-  const [loading, setLoading] = useState(true);
   const [amount, setAmount] = useState("");
   const [asset, setAsset] = useState<"XLM" | "USDC">("XLM");
   const [donating, setDonating] = useState(false);
-  const [galleryImages, setGalleryImages] = useState<ProjectMedia[]>([]);
-  const [roadmapItems, setRoadmapItems] = useState<RoadmapItem[]>([]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [publishing, setPublishing] = useState(false);
-  const [isOwner, setIsOwner] = useState(false);
 
   const { isConnected, publicKey, signTransaction } = useWallet();
 
-  useEffect(() => {
-    const fetchProjectData = async () => {
-      try {
-        const res = await fetch(`/api/projects/${params.id}?t=${Date.now()}`, {
-          credentials: "include",
-          cache: "no-store",
-        });
-        const data = await res.json();
-        setProject(data.project);
-
-        // Verificar ownership
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (user && data.project.owner_id === user.id) {
-          setIsOwner(true);
-        }
-
-        const { data: mediaData } = await supabase
-          .from("project_media")
-          .select("*")
-          .eq("project_id", String(params.id))
-          .order("order_index", { ascending: true });
-
-        if (mediaData) {
-          setGalleryImages(mediaData as ProjectMedia[]);
-        }
-
-        // Cargar roadmap items
-        const roadmapRes = await fetch(`/api/projects/${params.id}/roadmap`, {
-          credentials: "include",
-        });
-        if (roadmapRes.ok) {
-          const roadmapData = await roadmapRes.json();
-          setRoadmapItems(roadmapData.items || []);
-        }
-      } catch (error) {
-        console.error("Error fetching project:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProjectData();
-  }, [params.id]);
+  // Use custom hook for all project data including donations
+  const {
+    project,
+    galleryImages,
+    roadmapItems,
+    donations,
+    isOwner,
+    loading,
+    error,
+  } = useProject(String(params.id));
 
   const handlePublish = async () => {
     if (!project) return;
@@ -155,7 +99,7 @@ export default function ProjectPage() {
       }
 
       // Record donation in database
-      const donationResponse = await fetch("/api/donations", {
+      await fetch("/api/donations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -167,14 +111,6 @@ export default function ProjectPage() {
           network: "TESTNET",
         }),
       });
-
-      if (!donationResponse.ok) {
-        const errorData = await donationResponse.json().catch(() => ({}));
-        console.error("Failed to record donation:", errorData);
-        throw new Error(
-          `Failed to record donation in database: ${errorData.error || donationResponse.statusText}`,
-        );
-      }
 
       alert(
         `✅ Donation successful!\n\nAmount: ${amount} ${asset}\nTransaction: ${result.hash.substring(0, 8)}...${result.hash.substring(result.hash.length - 8)}\n\nThank you for supporting this project!`,
@@ -194,8 +130,10 @@ export default function ProjectPage() {
     return <div style={{ padding: "20px" }}>Loading...</div>;
   }
 
-  if (!project) {
-    return <div style={{ padding: "20px" }}>Project not found</div>;
+  if (error || !project) {
+    return (
+      <div style={{ padding: "20px" }}>{error || "Project not found"}</div>
+    );
   }
 
   return (
@@ -620,6 +558,8 @@ export default function ProjectPage() {
           wallet. No platform fees. Network: Testnet
         </p>
       </div>
+
+      <RecentDonations donations={donations} />
 
       <Lightbox
         open={lightboxOpen}

@@ -107,13 +107,6 @@ export async function createDonation(
   const stellarClient =
     input.network === "TESTNET" ? stellarTestnet : stellarMainnet;
 
-  console.log("🔍 Verifying payment:", {
-    txHash: input.txHash,
-    destinationWallet,
-    expectedAmount: input.amount,
-    expectedAsset: input.asset,
-  });
-
   const verification = await stellarClient.verifyPayment(
     input.txHash,
     destinationWallet,
@@ -121,10 +114,7 @@ export async function createDonation(
     input.asset,
   );
 
-  console.log("✅ Verification result:", verification);
-
   if (!verification.valid) {
-    console.error("❌ Payment verification failed:", verification.error);
     throw new Error(`Payment verification failed: ${verification.error}`);
   }
 

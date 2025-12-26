@@ -95,16 +95,6 @@ export class StellarClient {
           const paymentOp =
             op as StellarSdk.Horizon.ServerApi.PaymentOperationRecord;
 
-          console.log("🔍 Checking payment operation:", {
-            to: paymentOp.to,
-            expectedDestination,
-            amount: paymentOp.amount,
-            expectedAmount,
-            asset_type: paymentOp.asset_type,
-            asset_code: (paymentOp as any).asset_code,
-            expectedAsset,
-          });
-
           if (paymentOp.to === expectedDestination) {
             const assetMatch =
               expectedAsset === "XLM"
@@ -112,21 +102,7 @@ export class StellarClient {
                 : paymentOp.asset_type !== "native" &&
                   paymentOp.asset_code === expectedAsset;
 
-            // Compare amounts with tolerance for floating point precision
-            const amountMatch =
-              Math.abs(
-                parseFloat(paymentOp.amount) - parseFloat(expectedAmount),
-              ) < 0.0000001;
-
-            console.log("🔍 Match results:", {
-              assetMatch,
-              amountMatch,
-              amountDiff: Math.abs(
-                parseFloat(paymentOp.amount) - parseFloat(expectedAmount),
-              ),
-            });
-
-            if (assetMatch && amountMatch) {
+            if (assetMatch && paymentOp.amount === expectedAmount) {
               return { valid: true };
             }
           }

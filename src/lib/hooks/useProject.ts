@@ -20,10 +20,21 @@ interface RoadmapItem {
   order_index: number;
 }
 
+interface Donation {
+  id: string;
+  donor_wallet: string;
+  amount: string;
+  asset: string;
+  tx_hash: string;
+  network: string;
+  created_at: string;
+}
+
 export function useProject(projectId: string) {
   const [project, setProject] = useState<Project | null>(null);
   const [galleryImages, setGalleryImages] = useState<ProjectMedia[]>([]);
   const [roadmapItems, setRoadmapItems] = useState<RoadmapItem[]>([]);
+  const [donations, setDonations] = useState<Donation[]>([]);
   const [isOwner, setIsOwner] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,6 +87,18 @@ export function useProject(projectId: string) {
           const roadmapData = await roadmapRes.json();
           setRoadmapItems(roadmapData.items || []);
         }
+
+        // Fetch donations
+        const { data: donationsData } = await supabase
+          .from("donations")
+          .select("*")
+          .eq("project_id", projectId)
+          .order("created_at", { ascending: false })
+          .limit(10);
+
+        if (donationsData) {
+          setDonations(donationsData as Donation[]);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load project");
       } finally {
@@ -92,6 +115,7 @@ export function useProject(projectId: string) {
     project,
     galleryImages,
     roadmapItems,
+    donations,
     isOwner,
     loading,
     error,

@@ -48,7 +48,7 @@ export function useDonation() {
       }
 
       // Record donation in database
-      const donationResponse = await fetch("/api/donations", {
+      await fetch("/api/donations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -60,14 +60,6 @@ export function useDonation() {
           network: "TESTNET",
         }),
       });
-
-      if (!donationResponse.ok) {
-        const errorData = await donationResponse.json().catch(() => ({}));
-        console.error("Failed to record donation:", errorData);
-        throw new Error(
-          `Failed to record donation in database: ${errorData.error || donationResponse.statusText}`,
-        );
-      }
 
       return {
         success: true,

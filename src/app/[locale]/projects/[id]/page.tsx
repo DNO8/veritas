@@ -43,6 +43,14 @@ export default function ProjectPage() {
 
   const { isConnected, publicKey, signTransaction } = useWallet();
 
+  // Debug: Log wallet state
+  useEffect(() => {
+    console.log("Wallet State:", {
+      isConnected,
+      publicKey: publicKey?.substring(0, 8),
+    });
+  }, [isConnected, publicKey]);
+
   useEffect(() => {
     const fetchProjectData = async () => {
       try {

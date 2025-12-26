@@ -23,14 +23,6 @@ export default function SignupPage() {
     const locale = window.location.pathname.split("/")[1] || "es";
     const redirectUrl = `${siteUrl}/${locale}/auth/callback`;
 
-    // Debug logs
-    console.log("🔍 OAuth Debug Info (Signup):");
-    console.log("  - NEXT_PUBLIC_SITE_URL:", process.env.NEXT_PUBLIC_SITE_URL);
-    console.log("  - window.location.origin:", window.location.origin);
-    console.log("  - siteUrl (final):", siteUrl);
-    console.log("  - locale:", locale);
-    console.log("  - redirectTo:", redirectUrl);
-
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

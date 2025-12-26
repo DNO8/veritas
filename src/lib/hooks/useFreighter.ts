@@ -49,16 +49,26 @@ export function useFreighter() {
     // Freighter puede inyectarse como window.freighterApi o window.stellar
     const installed = !!(window.freighterApi || (window as any).stellar);
 
+    console.log("🔍 Freighter Detection:");
+    console.log("  - window.freighterApi:", !!window.freighterApi);
+    console.log("  - window.stellar:", !!(window as any).stellar);
+    console.log("  - isInstalled:", installed);
+
     setState((prev) => ({ ...prev, isInstalled: installed, isLoading: false }));
     return installed;
   }, []);
 
   // Connect to Freighter wallet
   const connect = useCallback(async () => {
+    console.log("🔗 Attempting to connect to Freighter...");
+
     // Usar window.freighterApi o window.stellar como fallback
     const freighter = window.freighterApi || (window as any).stellar;
 
+    console.log("  - freighter object:", !!freighter);
+
     if (!freighter) {
+      console.error("❌ Freighter not found");
       setState((prev) => ({
         ...prev,
         error: "Freighter wallet is not installed",
@@ -70,17 +80,24 @@ export function useFreighter() {
 
     try {
       // Request permission
+      console.log("  - Checking permission...");
       const isAllowed = await freighter.isAllowed();
+      console.log("  - isAllowed:", isAllowed);
 
       if (!isAllowed) {
+        console.log("  - Requesting permission...");
         await freighter.setAllowed();
       }
 
       // Get public key
+      console.log("  - Getting public key...");
       const publicKey = await freighter.getPublicKey();
+      console.log("  - Public key:", publicKey?.substring(0, 8) + "...");
 
       // Get network
+      console.log("  - Getting network...");
       const network = await freighter.getNetwork();
+      console.log("  - Network:", network);
 
       setState({
         isInstalled: true,
@@ -91,12 +108,16 @@ export function useFreighter() {
         error: null,
       });
 
+      console.log("✅ Wallet connected successfully");
       return true;
     } catch (error) {
       const errorMessage =
         error instanceof Error
           ? error.message
           : "Failed to connect to Freighter";
+
+      console.error("❌ Connection error:", errorMessage);
+      console.error("   Full error:", error);
 
       setState((prev) => ({
         ...prev,
@@ -154,12 +175,17 @@ export function useFreighter() {
     let attempts = 0;
     const maxAttempts = 10; // Intentar durante 1 segundo
 
+    console.log("🔄 Starting Freighter detection...");
+
     const checkWithRetry = () => {
       const installed = checkInstalled();
 
       if (!installed && attempts < maxAttempts) {
         attempts++;
+        console.log(`  - Retry ${attempts}/${maxAttempts}...`);
         setTimeout(checkWithRetry, 100);
+      } else if (!installed) {
+        console.log("⚠️ Freighter not detected after", maxAttempts, "attempts");
       }
     };
 

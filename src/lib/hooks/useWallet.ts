@@ -109,7 +109,7 @@ export function useWallet() {
           if (user) {
             const { error } = await supabase
               .from("users")
-              .update({ wallet_address: connection.publicKey } as any)
+              .update({ wallet_address: connection.publicKey } as never)
               .eq("id", user.id);
 
             if (error) {

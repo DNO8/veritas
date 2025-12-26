@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase/client";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import WalletConnect from "@/components/WalletConnect";
-import { useFreighter } from "@/lib/hooks/useFreighter";
+import { useWallet } from "@/lib/hooks/useWallet";
 import { sendPayment } from "@/lib/stellar/payment";
 
 interface ProjectMedia {
@@ -41,7 +41,7 @@ export default function ProjectPage() {
   const [publishing, setPublishing] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
 
-  const { isConnected, publicKey, signTransaction } = useFreighter();
+  const { isConnected, publicKey, signTransaction } = useWallet();
 
   useEffect(() => {
     const fetchProjectData = async () => {

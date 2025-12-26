@@ -5,6 +5,8 @@
  * Similar to how Stellar Lab implements wallet connections
  */
 
+import { WalletType } from "./wallet-types";
+
 export interface FreighterConnector {
   isAvailable: () => Promise<boolean>;
   getPublicKey: () => Promise<string>;
@@ -135,6 +137,7 @@ export async function signFreighterTransaction(
 export async function connectFreighter(): Promise<{
   publicKey: string;
   network: string;
+  walletType: WalletType;
 }> {
   // Step 1: Check if available, if not try to trigger injection
   let available = await isFreighterAvailable();
@@ -163,7 +166,7 @@ export async function connectFreighter(): Promise<{
 
   console.log("✅ Connected:", publicKey.substring(0, 8) + "...", network);
 
-  return { publicKey, network };
+  return { publicKey, network, walletType: WalletType.FREIGHTER };
 }
 
 // Type declarations

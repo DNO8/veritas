@@ -43,14 +43,6 @@ export default function ProjectPage() {
 
   const { isConnected, publicKey, signTransaction } = useWallet();
 
-  // Debug: Log wallet state
-  useEffect(() => {
-    console.log("🔍 Component Wallet State:", {
-      isConnected,
-      publicKey: publicKey?.substring(0, 8),
-    });
-  }, [isConnected, publicKey]);
-
   useEffect(() => {
     const fetchProjectData = async () => {
       try {
@@ -597,15 +589,7 @@ export default function ProjectPage() {
 
         <button
           type="button"
-          onClick={() => {
-            console.log("🔘 Button clicked - State:", {
-              isConnected,
-              publicKey: publicKey?.substring(0, 8),
-              amount,
-              donating,
-            });
-            handleDonate();
-          }}
+          onClick={handleDonate}
           disabled={!isConnected || donating || !amount}
           style={{
             width: "100%",
@@ -622,10 +606,6 @@ export default function ProjectPage() {
         >
           {donating ? "Processing..." : `Donate ${amount || "0"} ${asset}`}
         </button>
-        <p style={{ fontSize: "12px", color: "#999", marginTop: "5px" }}>
-          Debug: Connected={String(isConnected)} | PubKey=
-          {publicKey ? "Yes" : "No"} | Amount={amount || "empty"}
-        </p>
 
         <p style={{ marginTop: "10px", fontSize: "14px", color: "#666" }}>
           💡 Donations are sent directly to the project creator's Stellar

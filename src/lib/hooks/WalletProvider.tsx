@@ -96,15 +96,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           throw new Error(`Unsupported wallet type: ${type}`);
       }
 
-      console.log("✅ Wallet connected:", connection.publicKey.substring(0, 8));
-
       setIsConnected(true);
       setPublicKey(connection.publicKey);
       setNetwork(connection.network);
       setWalletType(connection.walletType);
       setIsLoading(false);
-
-      console.log("📝 Context state updated - isConnected: true");
 
       // Save wallet address to user profile
       try {

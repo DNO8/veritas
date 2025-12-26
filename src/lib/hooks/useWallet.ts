@@ -90,15 +90,18 @@ export function useWallet() {
 
       console.log("✅ Wallet connected:", connection.publicKey.substring(0, 8));
 
-      setState((prev) => ({
-        ...prev,
+      const newState = {
         isConnected: true,
         publicKey: connection.publicKey,
         network: connection.network,
         walletType: connection.walletType,
         isLoading: false,
         error: null,
-      }));
+        availableWallets: state.availableWallets,
+      };
+
+      console.log("📝 Setting new state:", newState);
+      setState(newState);
 
       // Save wallet address to user profile
       try {

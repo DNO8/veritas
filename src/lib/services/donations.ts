@@ -107,6 +107,14 @@ export async function createDonation(
   const stellarClient =
     input.network === "TESTNET" ? stellarTestnet : stellarMainnet;
 
+  console.log("🔍 [DONATION] Verifying payment:", {
+    txHash: input.txHash,
+    destinationWallet,
+    expectedAmount: input.amount,
+    expectedAsset: input.asset,
+    network: input.network,
+  });
+
   const verification = await stellarClient.verifyPayment(
     input.txHash,
     destinationWallet,
@@ -114,9 +122,17 @@ export async function createDonation(
     input.asset,
   );
 
+  console.log("📋 [DONATION] Verification result:", verification);
+
   if (!verification.valid) {
+    console.error(
+      "❌ [DONATION] Payment verification failed:",
+      verification.error,
+    );
     throw new Error(`Payment verification failed: ${verification.error}`);
   }
+
+  console.log("✅ [DONATION] Payment verified, inserting into database...");
 
   const { data, error } = await supabaseServer
     .from("donations")
@@ -135,8 +151,11 @@ export async function createDonation(
     throw new Error(`Failed to create donation: ${error.message}`);
   }
 
+  console.log("📊 [DONATION] Incrementing project amount...");
   await incrementProjectAmount(input.projectId, input.amount);
+  console.log("✅ [DONATION] Project amount incremented successfully");
 
+  console.log("🎉 [DONATION] Complete donation flow finished successfully");
   return data;
 }
 

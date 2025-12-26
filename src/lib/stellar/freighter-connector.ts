@@ -19,71 +19,44 @@ export interface FreighterConnector {
 
 /**
  * Check if Freighter is available
+ * Returns false to trigger injection attempt
  */
 export async function isFreighterAvailable(): Promise<boolean> {
   if (typeof window === "undefined") {
-    console.log("🔍 [Freighter] Server-side, not available");
     return false;
   }
 
-  const hasFreighterApi = !!window.freighterApi;
-  const hasStellar = !!(window as any).stellar;
-
-  console.log("🔍 [Freighter] Checking availability:");
-  console.log("  - window.freighterApi:", hasFreighterApi);
-  console.log("  - window.stellar:", hasStellar);
-
-  // Also check for the extension in a different way
-  const hasExtension = !!(window as any).freighter;
-  console.log("  - window.freighter:", hasExtension);
-
-  if (hasFreighterApi || hasStellar) {
-    console.log("✅ [Freighter] Available");
-    return true;
-  }
-
-  console.log("⚠️ [Freighter] Not immediately available");
+  // Always return false to force injection trigger on connect
+  // This works better with Freighter's lazy loading
   return false;
 }
 
 /**
- * Aggressively trigger Freighter injection
- * Called when user clicks Connect button
+ * Trigger Freighter and wait for it to load
  */
 async function triggerFreighterInjection(): Promise<boolean> {
-  console.log("🔄 [Freighter] Dispatching injection events...");
+  // Try direct access first
+  if (window.freighterApi) {
+    return true;
+  }
 
-  // Dispatch multiple events to wake up Freighter
-  window.dispatchEvent(new CustomEvent("freighter-request"));
-  window.dispatchEvent(new CustomEvent("stellar-request"));
-  window.postMessage({ type: "FREIGHTER_API_REQUEST" }, "*");
+  // Try to trigger via user interaction (click event)
+  const clickEvent = new MouseEvent("click", {
+    view: window,
+    bubbles: true,
+    cancelable: true,
+  });
+  document.dispatchEvent(clickEvent);
 
-  console.log("⏳ [Freighter] Waiting for injection (up to 5 seconds)...");
+  // Wait and check multiple times
+  for (let i = 0; i < 30; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-  // Wait up to 5 seconds with checks every 200ms
-  for (let i = 0; i < 25; i++) {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    const hasFreighterApi = !!window.freighterApi;
-    const hasStellar = !!(window as any).stellar;
-
-    if (i % 5 === 0) {
-      console.log(
-        `⏳ [Freighter] Check ${i + 1}/25 - freighterApi: ${hasFreighterApi}, stellar: ${hasStellar}`,
-      );
-    }
-
-    if (hasFreighterApi || hasStellar) {
-      console.log(
-        `✅ [Freighter] Injection successful after ${(i + 1) * 200}ms`,
-      );
+    if (window.freighterApi) {
       return true;
     }
   }
 
-  console.error(
-    "❌ [Freighter] Injection timeout - extension may not be installed",
-  );
   return false;
 }
 
@@ -172,43 +145,21 @@ export async function connectFreighter(): Promise<{
   network: string;
   walletType: WalletType;
 }> {
-  console.log("🔗 [Freighter] Starting connection...");
-
-  // Step 1: Check if available, if not try to trigger injection
-  let available = await isFreighterAvailable();
-  console.log("🔍 [Freighter] Initial availability:", available);
+  // Try to trigger injection
+  const available = await triggerFreighterInjection();
 
   if (!available) {
-    console.log("🔄 [Freighter] Triggering injection...");
-    available = await triggerFreighterInjection();
-    console.log("🔍 [Freighter] Availability after injection:", available);
-  }
-
-  if (!available) {
-    console.error("❌ [Freighter] Not available after all attempts");
     throw new Error(
-      "Freighter wallet is not responding. Please ensure the extension is installed and enabled, then try again.",
+      "Freighter wallet is not installed or not responding. Please install Freighter extension and try again.",
     );
   }
 
-  console.log("✅ [Freighter] Detected");
-
-  // Step 2: Request access
-  console.log("🔐 [Freighter] Requesting access...");
+  // Request access
   await requestFreighterAccess();
-  console.log("✅ [Freighter] Access granted");
 
-  // Step 3: Get public key
-  console.log("🔑 [Freighter] Getting public key...");
+  // Get public key and network
   const publicKey = await getFreighterPublicKey();
-  console.log("✅ [Freighter] Public key:", publicKey.substring(0, 8) + "...");
-
-  // Step 4: Get network
-  console.log("🌐 [Freighter] Getting network...");
   const network = await getFreighterNetwork();
-  console.log("✅ [Freighter] Network:", network);
-
-  console.log("✅ [Freighter] Connection complete");
 
   return { publicKey, network, walletType: WalletType.FREIGHTER };
 }

@@ -119,30 +119,17 @@ export default function ProjectPage() {
   };
 
   const handleDonate = async () => {
-    console.log("💰 Starting donation process...");
-    console.log("  - Amount:", amount);
-    console.log("  - Asset:", asset);
-    console.log("  - isConnected:", isConnected);
-    console.log("  - publicKey:", publicKey?.substring(0, 8) + "...");
-    console.log(
-      "  - project.wallet_address:",
-      project?.wallet_address?.substring(0, 8) + "...",
-    );
-
     if (!amount || Number(amount) <= 0) {
-      console.error("❌ Invalid amount");
       alert("Please enter a valid amount");
       return;
     }
 
     if (!isConnected || !publicKey) {
-      console.error("❌ Wallet not connected");
-      alert("Please connect your Freighter wallet first");
+      alert("Please connect your wallet first");
       return;
     }
 
     if (!project?.wallet_address) {
-      console.error("❌ Project has no wallet address");
       alert("This project doesn't have a wallet address configured");
       return;
     }
@@ -150,8 +137,6 @@ export default function ProjectPage() {
     setDonating(true);
 
     try {
-      console.log("  - Creating Stellar transaction...");
-      // 1. Crear y enviar transacción con Stellar
       const result = await sendPayment(
         {
           sourcePublicKey: publicKey,
@@ -159,24 +144,17 @@ export default function ProjectPage() {
           amount: amount,
           asset: asset,
           memo: `Donation to ${project.title}`,
-          network: "TESTNET", // Cambiar a MAINNET en producción
+          network: "TESTNET",
         },
         signTransaction,
       );
-
-      console.log(
-        "  - Transaction result:",
-        result.success ? "✅ Success" : "❌ Failed",
-      );
-      console.log("  - TX Hash:", result.hash);
 
       if (!result.success) {
         throw new Error("Transaction failed on Stellar network");
       }
 
-      // 2. Registrar donación en la base de datos
-      console.log("  - Recording donation in database...");
-      const donationRes = await fetch("/api/donations", {
+      // Record donation in database
+      await fetch("/api/donations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -189,32 +167,17 @@ export default function ProjectPage() {
         }),
       });
 
-      if (!donationRes.ok) {
-        console.error("❌ Failed to record donation in database");
-      } else {
-        console.log("✅ Donation recorded in database");
-      }
-
-      // 3. Mostrar éxito
-      console.log("✅ Donation completed successfully!");
       alert(
         `✅ Donation successful!\n\nAmount: ${amount} ${asset}\nTransaction: ${result.hash.substring(0, 8)}...${result.hash.substring(result.hash.length - 8)}\n\nThank you for supporting this project!`,
       );
 
-      // 4. Recargar proyecto para ver el nuevo amount
       window.location.reload();
     } catch (error) {
-      console.error("❌ Donation error:", error);
-      console.error(
-        "   Error details:",
-        error instanceof Error ? error.message : error,
-      );
       alert(
         `❌ Donation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     } finally {
       setDonating(false);
-      console.log("💰 Donation process ended");
     }
   };
 

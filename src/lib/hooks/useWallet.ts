@@ -107,19 +107,12 @@ export function useWallet() {
           } = await supabase.auth.getUser();
 
           if (user) {
-            const { error } = await supabase
+            await supabase
               .from("users")
               .update({ wallet_address: connection.publicKey } as never)
               .eq("id", user.id);
-
-            if (error) {
-              console.error("Failed to save wallet address:", error);
-            } else {
-              console.log("✅ Wallet address saved to user profile");
-            }
           }
         } catch (dbError) {
-          console.error("Failed to save wallet address:", dbError);
           // Don't fail the connection if DB save fails
         }
 

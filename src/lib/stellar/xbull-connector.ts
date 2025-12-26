@@ -44,37 +44,27 @@ export async function isXBullAvailable(): Promise<boolean> {
  * Connect to xBull wallet
  */
 export async function connectXBull(): Promise<WalletConnection> {
-  console.log(" [xBull] Starting connection...");
-
   try {
     const kit = new StellarWalletsKit({
       network: WalletNetwork.TESTNET,
       selectedWalletId: XBULL_ID,
       modules: allowAllModules(),
     });
-    console.log(" [xBull] Kit initialized");
 
-    console.log(" [xBull] Opening modal...");
     await kit.openModal({
       onWalletSelected: async (option: ISupportedWallet) => {
-        console.log(" [xBull] Wallet selected:", option.id);
         kit.setWallet(option.id);
       },
     });
-    console.log(" [xBull] Modal closed");
 
-    console.log(" [xBull] Getting public key...");
     const { address } = await kit.getAddress();
-    console.log(" [xBull] Public key:", address.substring(0, 8) + "...");
 
-    console.log(" [xBull] Connection complete");
     return {
       publicKey: address,
       network: "TESTNET",
       walletType: WalletType.XBULL,
     };
   } catch (error) {
-    console.error(" [xBull] Connection error:", error);
     if (error instanceof Error && error.message.includes("User closed modal")) {
       throw new Error("Connection canceled by user");
     }

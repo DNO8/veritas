@@ -18,27 +18,20 @@ export async function isAlbedoAvailable(): Promise<boolean> {
  */
 export async function connectAlbedo(): Promise<WalletConnection> {
   try {
-    // Request public key from Albedo
     const result = await albedo.publicKey({
       require_existing: false,
     });
-    console.log(
-      "✅ [Albedo] Public key received:",
-      result.pubkey.substring(0, 8) + "...",
-    );
 
     if (!result.pubkey) {
       throw new Error("Failed to get public key from Albedo");
     }
 
-    console.log("✅ [Albedo] Connection complete");
     return {
       publicKey: result.pubkey,
-      network: "PUBLIC", // Albedo uses mainnet by default
+      network: "PUBLIC",
       walletType: WalletType.ALBEDO,
     };
   } catch (error) {
-    console.error("❌ [Albedo] Connection error:", error);
     if (error instanceof Error && error.message.includes("canceled")) {
       throw new Error("Connection canceled by user");
     }

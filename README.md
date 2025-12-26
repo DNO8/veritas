@@ -2,6 +2,457 @@
 
 # 🌟 VERITAS
 
+### Plataforma de Crowdfunding Transparente Construida sobre Stellar
+
+[![Stellar](https://img.shields.io/badge/Stellar-Blockchain-7D00FF?style=for-the-badge&logo=stellar)](https://stellar.org)
+[![Next.js](https://img.shields.io/badge/Next.js-16.1-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com)
+
+**Presentación para Stellar Ideathon 2026**
+
+[Demo](#) • [Documentación](#-características) • [Contribuir](#-cómo-contribuir)
+
+</div>
+
+---
+
+## 📖 Acerca de
+
+**VERITAS** es una plataforma descentralizada de crowdfunding que permite a **proyectos, startups, PYMEs e individuos** recibir donaciones transparentes utilizando la **blockchain de Stellar**. Construida para el [Stellar Ideathon 2026](https://dorahacks.io/hackathon/ideaton2026/detail), VERITAS combina la accesibilidad de Web2 con la transparencia de Web3.
+
+### 🎯 Misión
+
+Hacer que las donaciones basadas en blockchain sean accesibles para todos, independientemente de su experiencia con criptomonedas, manteniendo total transparencia y cero custodia de fondos.
+
+### ✨ ¿Por qué Stellar?
+
+- ⚡ **Transacciones rápidas** - Finalidad casi instantánea (3-5 segundos)
+- 💰 **Comisiones bajas** - Fracciones de centavo por transacción
+- 🌍 **Soporte nativo de USDC** - Donaciones en stablecoin sin complejidad
+- 🚀 **Perfecto para micro-donaciones** - Ideal para crowdfunding
+- 🌎 **Amigable con LATAM** - Excelente infraestructura para América Latina
+- 🔓 **No custodial** - Los usuarios mantienen control total de sus fondos
+
+---
+
+## 🚀 Características
+
+### Funcionalidad Principal
+
+- ✅ **Híbrido Web2 + Web3** - Los usuarios pueden navegar sin wallet
+- ✅ **Google OAuth** - Onboarding fácil vía Supabase Auth
+- ✅ **Integración con Freighter Wallet** - Conecta wallets de Stellar sin problemas
+- ✅ **Soporte multi-activo** - Acepta donaciones en XLM y USDC
+- ✅ **Testnet y Mainnet** - Soporte completo para ambas redes
+- ✅ **Gestión de proyectos** - Crea, edita y publica proyectos
+- ✅ **Portadas generadas por IA** - Auto-genera portadas si no se suben
+- ✅ **Donaciones transparentes** - Todas las transacciones registradas on-chain
+- ✅ **Seguimiento de uso de fondos** - Muestra a los donantes cómo se usarán los fondos
+- ✅ **Visualización de roadmap** - Comparte hitos y objetivos del proyecto
+- ✅ **Protección de rutas** - Flujos de autenticación seguros
+
+### Aspectos Técnicos Destacados
+
+- 🔐 **No custodial** - Transacciones directas wallet-a-wallet
+- 📊 **PostgreSQL + Supabase** - Backend robusto con RLS
+- 🧪 **Testing completo** - Jest + Testing Library (63 tests)
+- 🎨 **UI minimalista** - Enfoque en funcionalidad sobre estética
+- 📱 **Diseño responsivo** - Funciona en todos los dispositivos
+- 🔒 **Seguridad primero** - Validación de inputs, protección de rutas, prevención de SQL injection
+
+---
+
+## 🛠️ Stack Tecnológico
+
+### Frontend
+- **Next.js 16.1** (App Router)
+- **React 19.2**
+- **TypeScript 5**
+- **TailwindCSS 4**
+
+### Backend
+- **Supabase** (Auth + PostgreSQL + Storage)
+- **PostgreSQL** con Row Level Security (RLS)
+
+### Blockchain
+- **Stellar SDK 14.4.3**
+- Integración con **Freighter Wallet**
+- Soporte para **XLM** y **USDC**
+
+### IA
+- **Google Generative AI** (Gemini) para generación de portadas
+
+### Testing y Calidad
+- **Jest 30** + **Testing Library**
+- **TypeScript** modo estricto
+- **Biome** para formateo
+
+---
+
+## 📦 Instalación
+
+### Prerequisitos
+
+- **Node.js 20+**
+- **pnpm** (gestor de paquetes recomendado)
+- **Cuenta de Supabase** (para la base de datos)
+- **Freighter Wallet** (para probar donaciones)
+
+### 1. Clonar el Repositorio
+
+```bash
+git clone https://github.com/TU_USUARIO/veritas.git
+cd veritas
+```
+
+### 2. Instalar Dependencias
+
+```bash
+pnpm install
+```
+
+### 3. Variables de Entorno
+
+Crea un archivo `.env.local` en el directorio raíz:
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_clave_anon_de_supabase
+NEXT_SECRET_SUPABASE_KEY=tu_clave_de_servicio_de_supabase
+
+# Google AI (para generación de portadas)
+GOOGLE_GENERATIVE_AI_API_KEY=tu_clave_de_google_ai
+
+# Stellar (opcional - por defecto testnet)
+NEXT_PUBLIC_STELLAR_NETWORK=TESTNET
+```
+
+### 4. Configuración de Base de Datos
+
+Ejecuta el schema SQL en tu proyecto de Supabase:
+
+```bash
+# Copia el schema desde supabase/schema.sql al editor SQL de Supabase
+# Luego ejecuta supabase/rls-policies.sql para las políticas de seguridad
+```
+
+### 5. Ejecutar Servidor de Desarrollo
+
+```bash
+pnpm dev
+```
+
+Abre [http://localhost:3000](http://localhost:3000) para ver la aplicación.
+
+---
+
+## 🧪 Testing
+
+### Ejecutar Todos los Tests
+
+```bash
+pnpm test
+```
+
+### Modo Watch (Desarrollo)
+
+```bash
+pnpm test:watch
+```
+
+### Reporte de Cobertura
+
+```bash
+pnpm test:coverage
+```
+
+### Test de Integración Stellar
+
+```bash
+pnpm test:stellar
+```
+
+**Wallet de Prueba:** `GAI74SI2CTURCDG6PGIXSG5B4KQ4E5GHEQMBS6Q4AJNYCHXRQZIJMRC7`
+
+---
+
+## 🏗️ Estructura del Proyecto
+
+```
+veritas/
+├── src/
+│   ├── app/                    # Páginas de Next.js App Router
+│   │   ├── api/               # Rutas API
+│   │   ├── auth/              # Páginas de autenticación
+│   │   ├── projects/          # Páginas de proyectos
+│   │   └── ...
+│   ├── components/            # Componentes React
+│   ├── lib/
+│   │   ├── auth/             # Utilidades de autenticación
+│   │   ├── services/         # Lógica de negocio
+│   │   ├── stellar/          # Integración Stellar SDK
+│   │   └── supabase/         # Cliente Supabase
+│   └── middleware.ts         # Middleware de Next.js
+├── supabase/
+│   ├── schema.sql            # Schema de base de datos
+│   └── rls-policies.sql      # Políticas de seguridad
+├── scripts/                   # Scripts de utilidad
+└── __tests__/                # Archivos de test
+```
+
+---
+
+## 🌐 Schema de Base de Datos
+
+### Tablas Principales
+
+- **users** - Perfiles de usuario (extiende Supabase auth)
+- **projects** - Proyectos de crowdfunding
+- **donations** - Registros de donaciones on-chain
+- **project_media** - Imágenes/videos del proyecto
+- **project_roadmap_items** - Hitos del proyecto
+- **fund_usage** - Asignación transparente de fondos
+
+### Características Clave
+
+- ✅ **Direcciones de wallet nullable** - Los usuarios no necesitan wallets para navegar
+- ✅ **Tipos enum** - `user_role`, `project_status`, `media_type`
+- ✅ **Queries indexadas** - Optimizadas para rendimiento del feed
+- ✅ **Eliminaciones en cascada** - Relaciones de datos limpias
+
+---
+
+## 💡 Cómo Funciona
+
+### Para Creadores de Proyectos
+
+1. **Regístrate** con Google OAuth
+2. **Completa tu perfil** (nombre, rol)
+3. **Crea proyecto** con descripción, objetivos y roadmap
+4. **Conecta wallet de Stellar** (Freighter)
+5. **Publica proyecto** para recibir donaciones
+
+### Para Donantes
+
+1. **Navega proyectos** (no se necesita wallet)
+2. **Conecta Freighter wallet**
+3. **Elige monto** y activo (XLM/USDC)
+4. **Confirma transacción** en Freighter
+5. **Donación registrada** on-chain y en base de datos
+
+### Flujo de Transacción
+
+```
+Wallet Donante → Red Stellar → Wallet Proyecto
+                      ↓
+               Hash de Transacción
+                      ↓
+          Base de Datos VERITAS (registro de auditoría)
+```
+
+**VERITAS nunca custodia fondos** - todas las transacciones son peer-to-peer.
+
+---
+
+## 🤝 Cómo Contribuir
+
+¡Damos la bienvenida a contribuciones de la comunidad! Aquí está cómo empezar:
+
+### 1. Hacer Fork del Repositorio
+
+Haz clic en el botón **Fork** en la parte superior derecha de esta página.
+
+### 2. Clonar tu Fork
+
+```bash
+git clone https://github.com/TU_USUARIO/veritas.git
+cd veritas
+```
+
+### 3. Crear una Rama
+
+```bash
+git checkout -b feature/nombre-de-tu-feature
+```
+
+**Convenciones de nombres de ramas:**
+- `feature/` - Nuevas características
+- `fix/` - Corrección de bugs
+- `docs/` - Actualizaciones de documentación
+- `test/` - Mejoras de tests
+- `refactor/` - Refactorización de código
+
+### 4. Hacer tus Cambios
+
+- Sigue el estilo de código existente
+- Escribe/actualiza tests para nuevas características
+- Actualiza documentación si es necesario
+- Ejecuta tests antes de hacer commit
+
+```bash
+pnpm test
+pnpm lint
+```
+
+### 5. Hacer Commit de tus Cambios
+
+```bash
+git add .
+git commit -m "feat: agregar característica increíble"
+```
+
+**Formato de mensajes de commit:**
+- `feat:` - Nueva característica
+- `fix:` - Corrección de bug
+- `docs:` - Documentación
+- `test:` - Tests
+- `refactor:` - Refactorización de código
+- `style:` - Formateo
+
+### 6. Push a tu Fork
+
+```bash
+git push origin feature/nombre-de-tu-feature
+```
+
+### 7. Crear un Pull Request
+
+1. Ve al repositorio original
+2. Haz clic en **Pull Requests** → **New Pull Request**
+3. Selecciona tu fork y rama
+4. Completa el template del PR:
+   - **Descripción** - ¿Qué hace este PR?
+   - **Issue Relacionado** - Enlaza issues relacionados
+   - **Testing** - ¿Cómo probaste esto?
+   - **Screenshots** - Si hay cambios de UI
+
+### Guías para PR
+
+✅ **HACER:**
+- Escribir mensajes de commit claros y descriptivos
+- Agregar tests para nuevas características
+- Actualizar documentación
+- Mantener PRs enfocados (una característica/fix por PR)
+- Responder al feedback de revisión
+
+❌ **NO HACER:**
+- Enviar PRs con tests fallidos
+- Incluir cambios no relacionados
+- Modificar schema de base de datos sin discusión
+- Agregar dependencias sin justificación
+
+### Proceso de Revisión de Código
+
+1. **Checks automatizados** - Tests, linting, type checking
+2. **Revisión de código** - Al menos una aprobación de maintainer
+3. **Testing** - Testing manual si es necesario
+4. **Merge** - Squash and merge a main
+
+---
+
+## 🐛 Reportar Issues
+
+¿Encontraste un bug? ¿Tienes una sugerencia?
+
+1. **Revisa issues existentes** - Evita duplicados
+2. **Crea un nuevo issue** con:
+   - Título claro
+   - Pasos para reproducir (para bugs)
+   - Comportamiento esperado vs actual
+   - Screenshots/logs si aplica
+   - Entorno (OS, navegador, etc.)
+
+---
+
+## 📋 Guías de Desarrollo
+
+### Principios Fundamentales
+
+1. **Backend Primero** - Priorizar integridad de datos y lógica de negocio
+2. **Sin Hardcoding** - Usar variables de entorno y base de datos
+3. **Web2 + Web3** - Soportar usuarios con y sin wallets
+4. **Validación en Todas Partes** - Nunca confiar en input del usuario
+5. **Cobertura de Tests** - Escribir tests para rutas críticas
+
+### Reglas de Base de Datos
+
+- ❌ **Nunca modificar schema** sin discusión del equipo
+- ✅ **Usar enums existentes** - `user_role`, `project_status`, `media_type`
+- ✅ **Respetar campos nullable** - `wallet_address` puede ser NULL
+- ✅ **Seguir convenciones de nombres** - snake_case para DB, camelCase para TS
+
+### Reglas de Integración Stellar
+
+- ✅ **Validar direcciones de wallet** - Usar `StrKey.isValidEd25519PublicKey`
+- ✅ **Confirmar transacciones** - Esperar confirmación on-chain
+- ✅ **Registrar todo** - `tx_hash`, `amount`, `asset`, `network`
+- ✅ **Manejar errores con gracia** - Problemas de red, fondos insuficientes, etc.
+- ❌ **Nunca asumir éxito** - Siempre verificar on-chain
+
+---
+
+## 🎯 Roadmap
+
+### MVP (Actual)
+- ✅ Autenticación de usuarios
+- ✅ Creación y gestión de proyectos
+- ✅ Integración con wallet de Stellar
+- ✅ Donaciones en XLM y USDC
+- ✅ Registro de transacciones
+
+### Características Futuras
+- 🔄 On-ramp fiat (Stripe/Flow)
+- 🔄 Smart contracts Soroban
+- 🔄 Financiamiento basado en hitos
+- 🔄 Sistema de reputación de proyectos
+- 🔄 Soporte multi-idioma
+- 🔄 Aplicación móvil
+
+---
+
+## 📄 Licencia
+
+Este proyecto es open source y está disponible bajo la [Licencia MIT](LICENSE).
+
+---
+
+## 🙏 Agradecimientos
+
+- **Stellar Development Foundation** - Por la increíble blockchain
+- **Supabase** - Por la infraestructura de backend
+- **DoraHacks** - Por organizar el Ideathon
+- **Contribuidores de la Comunidad** - Por hacer este proyecto mejor
+
+---
+
+## 📞 Contacto
+
+- **GitHub Issues** - Para bugs y solicitudes de características
+- **Discussions** - Para preguntas e ideas
+- **Twitter** - [@veritas_stellar](#)
+
+---
+
+<div align="center">
+
+**Construido con ❤️ para Stellar Ideathon 2026**
+
+[⭐ Dale estrella a este repo](https://github.com/TU_USUARIO/veritas) • [🐛 Reportar Bug](https://github.com/TU_USUARIO/veritas/issues) • [💡 Solicitar Característica](https://github.com/TU_USUARIO/veritas/issues)
+
+</div>
+
+---
+---
+---
+
+# 📖 English Version
+
+<div align="center">
+
+# 🌟 VERITAS
+
 ### Transparent Crowdfunding Platform Built on Stellar
 
 [![Stellar](https://img.shields.io/badge/Stellar-Blockchain-7D00FF?style=for-the-badge&logo=stellar)](https://stellar.org)

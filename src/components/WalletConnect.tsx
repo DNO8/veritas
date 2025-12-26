@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useWallet } from "@/lib/hooks/useWallet";
+import { useWallet } from "@/lib/hooks/WalletProvider";
 import WalletSelector from "./WalletSelector";
 import { WalletType } from "@/lib/stellar/wallet-types";
 

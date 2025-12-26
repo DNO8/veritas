@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase/client";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import WalletConnect from "@/components/WalletConnect";
-import { useWallet } from "@/lib/hooks/useWallet";
+import { useWallet } from "@/lib/hooks/WalletProvider";
 import { sendPayment } from "@/lib/stellar/payment";
 
 interface ProjectMedia {

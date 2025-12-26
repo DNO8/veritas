@@ -19,10 +19,13 @@ export default function SignupPage() {
   const handleGoogleSignup = async () => {
     setGoogleLoading(true);
 
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+    const locale = window.location.pathname.split("/")[1] || "es";
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${siteUrl}/${locale}/auth/callback`,
         queryParams: {
           access_type: "offline",
           prompt: "consent",

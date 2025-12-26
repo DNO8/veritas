@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
+  const params = useParams();
+  const locale = (params.locale as string) || "es";
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
 
@@ -42,15 +44,15 @@ export default function AuthCallbackPage() {
 
             const user = userData as any;
             if (userData && user.name && user.role) {
-              router.replace("/projects");
+              router.replace(`/${locale}/projects`);
             } else {
-              router.replace("/complete-profile");
+              router.replace(`/${locale}/complete-profile`);
             }
             return;
           }
 
           // Sin sesión y sin parámetros de auth = acceso no autorizado
-          router.replace("/forbidden");
+          router.replace(`/${locale}/login`);
           return;
         }
 
@@ -69,11 +71,11 @@ export default function AuthCallbackPage() {
 
           const user = userData as any;
           if (userError || !userData || !user.name || !user.role) {
-            router.replace("/complete-profile");
+            router.replace(`/${locale}/complete-profile`);
             return;
           }
 
-          router.replace("/projects");
+          router.replace(`/${locale}/projects`);
           return;
         }
 
@@ -93,7 +95,7 @@ export default function AuthCallbackPage() {
 
           if (sessionError) {
             setError("Failed to authenticate");
-            setTimeout(() => router.replace("/login"), 2000);
+            setTimeout(() => router.replace(`/${locale}/login`), 2000);
             return;
           }
 
@@ -106,26 +108,26 @@ export default function AuthCallbackPage() {
               .single();
 
             if (userError || !userData) {
-              router.replace("/complete-profile");
+              router.replace(`/${locale}/complete-profile`);
               return;
             }
 
             const user = userData as any;
             if (!user.name || !user.role) {
-              router.replace("/complete-profile");
+              router.replace(`/${locale}/complete-profile`);
               return;
             }
 
-            router.replace("/projects");
+            router.replace(`/${locale}/projects`);
             return;
           }
         }
 
         setError("No authentication data found");
-        setTimeout(() => router.replace("/login"), 2000);
+        setTimeout(() => router.replace(`/${locale}/login`), 2000);
       } catch (err) {
         setError("Authentication failed");
-        setTimeout(() => router.replace("/login"), 2000);
+        setTimeout(() => router.replace(`/${locale}/login`), 2000);
       }
     };
 

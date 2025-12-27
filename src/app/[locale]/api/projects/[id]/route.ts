@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -30,6 +30,25 @@ export async function GET(
 
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    // Verificar si el proyecto es público o si el usuario es el owner
+    const supabase = await createServerSupabaseClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // Permitir acceso si:
+    // 1. El proyecto está publicado (público)
+    // 2. El usuario es el owner (puede ver sus propios drafts)
+    const isOwner = user && project.owner_id === user.id;
+    const isPublished = project.status === "published";
+
+    if (!isPublished && !isOwner) {
+      return NextResponse.json(
+        { error: "Project not found or not accessible" },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json(

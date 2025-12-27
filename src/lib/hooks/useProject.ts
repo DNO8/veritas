@@ -55,10 +55,16 @@ export function useProject(projectId: string) {
           throw new Error("Failed to fetch project");
         }
 
+        // Verificar que la respuesta sea JSON
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Invalid response format");
+        }
+
         const data = await res.json();
         setProject(data.project);
 
-        // Check ownership
+        // Check ownership (solo si hay usuario)
         const {
           data: { user },
         } = await supabase.auth.getUser();

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useWallet } from "@/lib/hooks/WalletProvider";
 import WalletSelector from "./WalletSelector";
+import WalletDebugger from "./WalletDebugger";
 import { WalletType } from "@/lib/stellar/wallet-types";
 
 export default function WalletConnect() {
@@ -73,6 +74,7 @@ export default function WalletConnect() {
   if (!isConnected) {
     return (
       <div style={{ marginBottom: "20px" }}>
+        <WalletDebugger />
         <button
           onClick={() => setShowSelector(true)}
           style={{

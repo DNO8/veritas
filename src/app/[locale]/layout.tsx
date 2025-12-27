@@ -7,6 +7,7 @@ import { locales } from "@/i18n/config";
 import "../globals.css";
 import Navbar from "@/components/Navbar";
 import { WalletProvider } from "@/lib/hooks/WalletProvider";
+import { SessionManager } from "@/components/SessionManager";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,6 +50,7 @@ export default async function LocaleLayout({
       >
         <NextIntlClientProvider messages={messages}>
           <WalletProvider>
+            <SessionManager />
             <Navbar />
             {children}
           </WalletProvider>

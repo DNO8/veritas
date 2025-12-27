@@ -11,4 +11,17 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createBrowserClient<Database>(
   supabaseUrl,
   supabaseAnonKey,
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      flowType: "pkce",
+    },
+    global: {
+      headers: {
+        "x-application-name": "veritas",
+      },
+    },
+  },
 );

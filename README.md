@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌟 VERITAS
+# 🌟 Colmena Crownfunding
 
 ### Plataforma de Crowdfunding Transparente Construida sobre Stellar
 

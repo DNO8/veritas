@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
   // 1. Ejecutar middleware de i18n
   const response = intlMiddleware(request);
 
-  // 2. Crear cliente de Supabase
+  // 2. Crear cliente de Supabase con configuración de cookies
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -24,9 +24,17 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
-          );
+          cookiesToSet.forEach(({ name, value, options }) => {
+            // Configurar cookies con tiempo de expiración de 2 horas
+            const cookieOptions = {
+              ...options,
+              maxAge: 7200, // 2 horas en segundos
+              httpOnly: true,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax" as const,
+            };
+            response.cookies.set(name, value, cookieOptions);
+          });
         },
       },
     },

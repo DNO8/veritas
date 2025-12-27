@@ -36,8 +36,34 @@ export async function isXBullAvailable(): Promise<boolean> {
     return false;
   }
 
-  // Check if xBull extension is installed
-  return !!(window as any).xBullSDK;
+  try {
+    // Método 1: Verificar xBullSDK en window
+    if ((window as any).xBullSDK) {
+      return true;
+    }
+
+    // Método 2: Verificar xBullWalletConnect
+    if ((window as any).xBullWalletConnect) {
+      return true;
+    }
+
+    // Método 3: Usar StellarWalletsKit para detectar wallets disponibles
+    const kit = new StellarWalletsKit({
+      network: WalletNetwork.TESTNET,
+      selectedWalletId: XBULL_ID,
+      modules: allowAllModules(),
+    });
+
+    const supportedWallets = await kit.getSupportedWallets();
+    const xBullWallet = supportedWallets.find(
+      (wallet) => wallet.id === XBULL_ID,
+    );
+
+    return !!xBullWallet;
+  } catch (error) {
+    console.warn("Error detecting xBull wallet:", error);
+    return false;
+  }
 }
 
 /**
@@ -45,30 +71,59 @@ export async function isXBullAvailable(): Promise<boolean> {
  */
 export async function connectXBull(): Promise<WalletConnection> {
   try {
+    // Verificar si xBull está instalado
+    const isAvailable = await isXBullAvailable();
+    if (!isAvailable) {
+      throw new Error(
+        "xBull wallet is not installed. Please install it from https://xbull.app/",
+      );
+    }
+
     const kit = new StellarWalletsKit({
       network: WalletNetwork.TESTNET,
       selectedWalletId: XBULL_ID,
       modules: allowAllModules(),
     });
 
-    await kit.openModal({
-      onWalletSelected: async (option: ISupportedWallet) => {
-        kit.setWallet(option.id);
-      },
-    });
+    // Intentar conectar directamente sin modal si xBull está seleccionado
+    try {
+      kit.setWallet(XBULL_ID);
+      const { address } = await kit.getAddress();
 
-    const { address } = await kit.getAddress();
+      return {
+        publicKey: address,
+        network: "TESTNET",
+        walletType: WalletType.XBULL,
+      };
+    } catch (directError) {
+      // Si falla la conexión directa, abrir modal
+      await kit.openModal({
+        onWalletSelected: async (option: ISupportedWallet) => {
+          kit.setWallet(option.id);
+        },
+      });
 
-    return {
-      publicKey: address,
-      network: "TESTNET",
-      walletType: WalletType.XBULL,
-    };
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("User closed modal")) {
-      throw new Error("Connection canceled by user");
+      const { address } = await kit.getAddress();
+
+      return {
+        publicKey: address,
+        network: "TESTNET",
+        walletType: WalletType.XBULL,
+      };
     }
-    throw error;
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes("User closed modal")) {
+        throw new Error("Connection canceled by user");
+      }
+      if (error.message.includes("not installed")) {
+        throw error;
+      }
+    }
+    console.error("xBull connection error:", error);
+    throw new Error(
+      "Failed to connect to xBull. Make sure the extension is installed and enabled.",
+    );
   }
 }
 

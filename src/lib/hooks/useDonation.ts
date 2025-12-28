@@ -37,7 +37,7 @@ export function useDonation() {
           destinationPublicKey: destinationWallet,
           amount: amount,
           asset: asset,
-          memo: `Donation to ${projectTitle}`,
+          memo: `Donate:${projectId.substring(0, 8)}`,
           network: "TESTNET",
         },
         signTransaction,

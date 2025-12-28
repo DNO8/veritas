@@ -45,38 +45,17 @@ export function useProject(projectId: string) {
         setLoading(true);
         setError(null);
 
-        // Fetch project with cache busting
-        console.log("[useProject] Fetching project:", projectId);
-        const res = await fetch(`/api/projects/${projectId}?t=${Date.now()}`, {
+        // Fetch project
+        const res = await fetch(`/api/projects/${projectId}`, {
           credentials: "include",
-          cache: "no-store",
-        });
-
-        console.log("[useProject] Response status:", res.status);
-        console.log("[useProject] Response headers:", {
-          contentType: res.headers.get("content-type"),
-          location: res.headers.get("location"),
+          next: { revalidate: 30 },
         });
 
         if (!res.ok) {
-          const text = await res.text();
-          console.error("[useProject] Error response:", text.substring(0, 200));
           throw new Error(`Failed to fetch project (${res.status})`);
         }
 
-        // Verificar que la respuesta sea JSON
-        const contentType = res.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-          const text = await res.text();
-          console.error(
-            "[useProject] Non-JSON response:",
-            text.substring(0, 500),
-          );
-          throw new Error(`Invalid response format: ${contentType}`);
-        }
-
         const data = await res.json();
-        console.log("[useProject] Project data received:", data.project?.id);
         setProject(data.project);
 
         // Check ownership (solo si hay usuario)
@@ -88,64 +67,38 @@ export function useProject(projectId: string) {
           setIsOwner(true);
         }
 
-        // Fetch gallery images
-        console.log("[useProject] Fetching gallery images");
-        const { data: mediaData } = await supabase
-          .from("project_media")
-          .select("*")
-          .eq("project_id", projectId)
-          .order("order_index", { ascending: true });
+        // Fetch related data in parallel for better performance
+        const [mediaResult, roadmapRes, donationsResult] = await Promise.all([
+          supabase
+            .from("project_media")
+            .select("*")
+            .eq("project_id", projectId)
+            .order("order_index", { ascending: true }),
+          fetch(`/api/projects/${projectId}/roadmap`, {
+            credentials: "include",
+          }),
+          supabase
+            .from("donations")
+            .select("*")
+            .eq("project_id", projectId)
+            .order("created_at", { ascending: false })
+            .limit(10),
+        ]);
 
-        if (mediaData) {
-          console.log("[useProject] Gallery images loaded:", mediaData.length);
-          setGalleryImages(mediaData as ProjectMedia[]);
+        // Set gallery images
+        if (mediaResult.data) {
+          setGalleryImages(mediaResult.data as ProjectMedia[]);
         }
 
-        // Fetch roadmap
-        console.log("[useProject] Fetching roadmap");
-        const roadmapRes = await fetch(`/api/projects/${projectId}/roadmap`, {
-          credentials: "include",
-        });
-
-        console.log("[useProject] Roadmap response status:", roadmapRes.status);
-        console.log(
-          "[useProject] Roadmap content-type:",
-          roadmapRes.headers.get("content-type"),
-        );
-
+        // Set roadmap items
         if (roadmapRes.ok) {
-          const roadmapContentType = roadmapRes.headers.get("content-type");
-          if (
-            !roadmapContentType ||
-            !roadmapContentType.includes("application/json")
-          ) {
-            const text = await roadmapRes.text();
-            console.error(
-              "[useProject] Roadmap non-JSON response:",
-              text.substring(0, 500),
-            );
-          } else {
-            const roadmapData = await roadmapRes.json();
-            console.log(
-              "[useProject] Roadmap items loaded:",
-              roadmapData.items?.length || 0,
-            );
-            setRoadmapItems(roadmapData.items || []);
-          }
+          const roadmapData = await roadmapRes.json();
+          setRoadmapItems(roadmapData.items || []);
         }
 
-        // Fetch donations
-        console.log("[useProject] Fetching donations");
-        const { data: donationsData } = await supabase
-          .from("donations")
-          .select("*")
-          .eq("project_id", projectId)
-          .order("created_at", { ascending: false })
-          .limit(10);
-
-        if (donationsData) {
-          console.log("[useProject] Donations loaded:", donationsData.length);
-          setDonations(donationsData as Donation[]);
+        // Set donations
+        if (donationsResult.data) {
+          setDonations(donationsResult.data as Donation[]);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load project");

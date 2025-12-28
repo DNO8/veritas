@@ -102,7 +102,7 @@ export default function ProjectPage() {
           destinationPublicKey: project.wallet_address,
           amount: amount,
           asset: asset,
-          memo: `Donation to ${project.title}`,
+          memo: `Donate:${project.id.substring(0, 8)}`,
           network: "TESTNET",
         },
         signTransaction,

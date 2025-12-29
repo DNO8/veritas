@@ -2,13 +2,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import type { Project } from "@/lib/supabase/types";
+import ProjectCard from "./ProjectCard";
+import ProjectsClient from "./ProjectsClient";
 
 async function getProjects(): Promise<Project[]> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
     const res = await fetch(`${baseUrl}/api/projects`, {
-      next: { revalidate: 60 }, // Cache por 60 segundos
+      next: { revalidate: 60 },
     });
 
     if (!res.ok) {
@@ -27,77 +29,49 @@ export default async function ProjectsPage() {
   const t = await getTranslations("projects");
 
   return (
-    <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
-      <h1>{t("projectsFeed")}</h1>
-      <p style={{ color: "#666", fontSize: "14px" }}>
-        {t("totalProjects")}: {projects.length}
-      </p>
-
-      <div style={{ marginBottom: "20px" }}>
-        <Link
-          href="/projects/new"
-          style={{
-            padding: "10px 20px",
-            background: "#0070f3",
-            color: "white",
-            textDecoration: "none",
-            borderRadius: "4px",
-            display: "inline-block",
-          }}
-        >
-          {t("createProject")}
-        </Link>
+    <div className="min-h-screen hex-pattern">
+      {/* Header */}
+      <div className="bg-[#FDCB6E] border-b-4 border-black py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <h1 className="text-4xl lg:text-5xl font-bold text-black mb-2">
+                🐝 {t("projectsFeed")}
+              </h1>
+              <p className="font-mono text-black/70">
+                {t("totalProjects")}:{" "}
+                <span className="font-bold">{projects.length}</span>{" "}
+                {t("activeProjects") || "proyectos activos"}
+              </p>
+            </div>
+            <Link
+              href="/projects/new"
+              className="btn-brutal btn-brutal-dark text-lg self-start md:self-auto"
+            >
+              + {t("createProject")}
+            </Link>
+          </div>
+        </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-          gap: "20px",
-        }}
-      >
+      {/* Projects Grid - Masonry Style */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {projects.length === 0 ? (
-          <p>{t("noProjects")}</p>
-        ) : (
-          projects.map((project) => (
-            <div
-              key={project.id}
-              style={{
-                border: "1px solid #ddd",
-                padding: "20px",
-                borderRadius: "8px",
-              }}
+          <div className="card-brutal p-12 text-center bg-white">
+            <div className="text-6xl mb-4">🍯</div>
+            <h2 className="text-2xl font-bold mb-2">{t("noProjects")}</h2>
+            <p className="text-gray-600 mb-6">
+              {t("beFirstToCreate") || "Sé el primero en crear un proyecto"}
+            </p>
+            <Link
+              href="/projects/new"
+              className="btn-brutal btn-brutal-primary"
             >
-              <Image
-                src={project.cover_image_url}
-                alt={project.title}
-                width={300}
-                height={200}
-                style={{
-                  width: "100%",
-                  height: "200px",
-                  objectFit: "contain",
-                  borderRadius: "4px",
-                  backgroundColor: "#f5f5f5",
-                }}
-                loading="lazy"
-                placeholder="blur"
-                blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZSIvPjwvc3ZnPg=="
-              />
-              <h2>{project.title}</h2>
-              <p>{project.short_description}</p>
-              <p>
-                <strong>{t("raised")}:</strong> {project.current_amount} XLM
-                {project.goal_amount && ` / ${project.goal_amount} XLM`}
-              </p>
-              <Link
-                href={`/projects/${project.id}`}
-                style={{ color: "#0070f3" }}
-              >
-                {t("viewProject")} →
-              </Link>
-            </div>
-          ))
+              + {t("createProject")}
+            </Link>
+          </div>
+        ) : (
+          <ProjectsClient projects={projects} />
         )}
       </div>
     </div>

@@ -11,6 +11,13 @@ const intlMiddleware = createMiddleware({
 });
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  // Skip middleware for API routes
+  if (pathname.startsWith("/api")) {
+    return NextResponse.next();
+  }
+
   // 1. Ejecutar middleware de i18n
   const response = intlMiddleware(request);
 
@@ -46,7 +53,6 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // 4. Proteger rutas privadas
-  const pathname = request.nextUrl.pathname;
   const segments = pathname.split("/").filter(Boolean);
   const locale = locales.includes(segments[0] as any)
     ? segments[0]

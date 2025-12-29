@@ -1,0 +1,75 @@
+{
+  "project_metadata": {
+    "name": "Colmena",
+    "version": "2.1.0-STELAR-PRO",
+    "environment": "Windsurf Agentic IDE",
+    "mission": "Protocolo de transparencia programada para crowdfunding social y creativo.",
+    "pitch_logic": {
+      "hook": "Entendimiento del problema en 5s",
+      "moat": "Diferenciador visual y técnico en 10s"
+    }
+  },
+  "technical_stack": {
+    "frontend": "React.js + Vite + Tailwind CSS + Framer Motion, GSAP",
+    "blockchain_layer": {
+      "network": "Stellar (SDK)",
+      "sdk": "Stellar SDK / Soroban-client",
+      "currency": "USDC (Transacciones estables), XLM",
+      "transaction_target": "5s Finality"
+    },
+    "authentication": {
+      "method": "Account Abstraction (Google OAuth), SupaBase Auth",
+      "ux_concept": "Invisible Wallet (Social Login to Public/Private Key mapping)",
+      "supported_wallets": ["Freighter Wallet", "xBull","Albedo"]
+    }
+  },
+  "design_system_brutalist_hive": {
+    "theme": "Neobrutalismo Abeja",
+    "ui_rules": {
+      "borders": "4px solid #000000",
+      "shadows": "Hard-edge 8px 8px 0px #000000",
+      "typography": "Space Grotesk (Headings), JetBrains Mono (Tech/Data)",
+      "palette": {
+        "primary": "#FDCB6E (Yellow Bee)",
+        "secondary": "#E67E22 (Orange Honey)",
+        "accent": "#000000",
+        "background": "#FFFFFF"
+      }
+    },
+    "layout_patterns": {
+      "main_feed": "Pinterest-style Masonry Grid",
+      "transitions": "View Transitions API para expansión de celdas fluida"
+    }
+  },
+  "functional_modules": {
+    "module_1_milestone_escrow": {
+      "description": "Contratos inteligentes Soroban que bloquean fondos y los liberan por hitos verificados.",
+      "logic": "Suma de costos de Roadmap = Meta de financiamiento total."
+    },
+    "module_2_proof_of_impact": {
+      "features": [
+        "Carga de evidencias (media/docs) para validación de hitos",
+        "Generación de portadas por IA basadas en la descripción del hito",
+        "NFT Badges (Soulbound) como prueba de donación inmutable"
+      ]
+    },
+    "module_3_financial_bridge": {
+      "integrations": ["MoonPay", "Alchemy Pay"],
+      "purpose": "On/Off Ramps para convertir Fiat a USDC sin salir de la app"
+    }
+  },
+  "user_flows": {
+    "onboarding": "Login con Google -> Creación automática de cuenta Stellar -> Perfil de Guardián.",
+    "creation": "Draft de proyecto -> Definición de Celdas de Impacto -> Publicación en Grilla Pinterest.",
+    "donation": "Descubrimiento visual -> Donación en 2 clics -> Minteo de medalla NFT."
+  },
+  "localization": {
+    "language": "Español Latinoamericano (ES-419)",
+    "tone": "Audaz, transparente y orientado a la acción"
+  },
+  "quality_standards": {
+    "ux_philosophy": "MLP (Minimum Lovable Product)",
+    "performance": "First Meaningful Paint < 1.2s",
+    "accessibility": "Información fácil de digerir para doomis"
+  }
+}

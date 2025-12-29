@@ -1,132 +1,114 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useDonation } from "@/lib/hooks/useDonation";
 import { useWallet } from "@/lib/hooks/WalletProvider";
 import WalletConnect from "@/components/WalletConnect";
+import { useTranslations } from "next-intl";
 
 interface DonationFormProps {
   projectId: string;
-  projectTitle: string;
   projectWallet: string | null;
   onSuccess: () => void;
+  onError?: (message: string) => void;
 }
 
 export default function DonationForm({
   projectId,
-  projectTitle,
   projectWallet,
   onSuccess,
+  onError,
 }: DonationFormProps) {
-  const { isConnected, publicKey } = useWallet();
+  const t = useTranslations("donations");
+  const { isConnected } = useWallet();
   const { amount, setAmount, asset, setAsset, donating, donate, canDonate } =
     useDonation();
 
   const handleDonate = async () => {
     if (!projectWallet) {
-      alert("This project doesn't have a wallet address configured");
+      onError?.("Este proyecto no tiene una wallet configurada");
       return;
     }
 
     try {
-      const result = await donate(projectId, projectTitle, projectWallet);
-
-      alert(
-        `✅ Donation successful!\n\nAmount: ${result.amount} ${result.asset}\nTransaction: ${result.hash.substring(0, 8)}...${result.hash.substring(result.hash.length - 8)}\n\nThank you for supporting this project!`,
-      );
-
+      const result = await donate(projectId, projectId, projectWallet);
       onSuccess();
     } catch (error) {
-      alert(
-        `❌ Donation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+      onError?.(error instanceof Error ? error.message : "Error desconocido");
     }
   };
 
   return (
-    <div
-      style={{
-        background: "#f9f9f9",
-        padding: "20px",
-        borderRadius: "8px",
-        marginTop: "30px",
-      }}
-    >
-      <h3 style={{ marginBottom: "15px" }}>Support This Project</h3>
+    <div className="border-t-2 border-black pt-4 mt-4">
+      <h3 className="font-bold text-sm sm:text-base mb-3">🐝 {t("donate")}</h3>
 
       <WalletConnect />
 
-      <div style={{ marginTop: "15px" }}>
-        <label
-          htmlFor="donationAsset"
-          style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}
+      <div className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
+        <div>
+          <label className="block font-mono text-xs sm:text-sm mb-1.5 sm:mb-2">
+            {t("asset")}
+          </label>
+          <select
+            value={asset}
+            onChange={(e) => setAsset(e.target.value as "XLM" | "USDC")}
+            className="input-brutal"
+          >
+            <option value="XLM">XLM (Stellar Lumens)</option>
+            <option value="USDC">USDC (USD Coin)</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block font-mono text-xs sm:text-sm mb-1.5 sm:mb-2">
+            {t("amount")} ({asset})
+          </label>
+          <input
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="10"
+            min="0.0000001"
+            step="0.1"
+            className="input-brutal"
+          />
+        </div>
+
+        {/* Quick amounts */}
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+          {[5, 10, 25, 50].map((val) => (
+            <button
+              key={val}
+              type="button"
+              onClick={() => setAmount(String(val))}
+              className="py-1.5 sm:py-2 border-2 border-black font-mono text-xs sm:text-sm hover:bg-[#FDCB6E] transition-colors"
+            >
+              {val}
+            </button>
+          ))}
+        </div>
+
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          type="button"
+          onClick={handleDonate}
+          disabled={!canDonate || donating}
+          className={`w-full btn-brutal ${
+            !canDonate || donating
+              ? "bg-gray-300 cursor-not-allowed shadow-none"
+              : "btn-brutal-primary animate-pulse-glow"
+          }`}
         >
-          Asset
-        </label>
-        <select
-          id="donationAsset"
-          value={asset}
-          onChange={(e) => setAsset(e.target.value as "XLM" | "USDC")}
-          style={{
-            width: "100%",
-            padding: "10px",
-            fontSize: "16px",
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-          }}
-        >
-          <option value="XLM">XLM (Stellar Lumens)</option>
-          <option value="USDC">USDC (USD Coin)</option>
-        </select>
+          {donating
+            ? t("processing")
+            : `🍯 ${t("donate")} ${amount || "0"} ${asset}`}
+        </motion.button>
+
+        <p className="text-[10px] sm:text-xs text-gray-500 font-mono text-center">
+          💡 Directo a la wallet del creador • Sin comisiones • Testnet
+        </p>
       </div>
-
-      <div style={{ marginTop: "15px" }}>
-        <label
-          htmlFor="donationAmount"
-          style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}
-        >
-          Amount ({asset})
-        </label>
-        <input
-          id="donationAmount"
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder="10"
-          min="0.0000001"
-          step="0.1"
-          style={{
-            width: "100%",
-            padding: "10px",
-            fontSize: "16px",
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-          }}
-        />
-      </div>
-
-      <button
-        type="button"
-        onClick={handleDonate}
-        disabled={!canDonate || donating}
-        style={{
-          width: "100%",
-          padding: "15px",
-          fontSize: "18px",
-          background: !canDonate || donating ? "#ccc" : "#0070f3",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          cursor: !canDonate || donating ? "not-allowed" : "pointer",
-          marginTop: "15px",
-        }}
-      >
-        {donating ? "Processing..." : `Donate ${amount || "0"} ${asset}`}
-      </button>
-
-      <p style={{ marginTop: "10px", fontSize: "14px", color: "#666" }}>
-        💡 Donations are sent directly to the project creator's Stellar wallet.
-        No platform fees. Network: Testnet
-      </p>
     </div>
   );
 }

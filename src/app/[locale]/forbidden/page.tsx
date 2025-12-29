@@ -2,95 +2,69 @@ import Link from "next/link";
 
 export default function ForbiddenPage() {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "80vh",
-        padding: "20px",
-        textAlign: "center",
-      }}
-    >
-      <h1
-        style={{
-          fontSize: "120px",
-          fontWeight: "bold",
-          margin: "0",
-          color: "#f59e0b",
-        }}
-      >
-        403
-      </h1>
-      <h2
-        style={{
-          fontSize: "32px",
-          fontWeight: "600",
-          margin: "20px 0",
-          color: "#333",
-        }}
-      >
-        Access Forbidden
-      </h2>
-      <p
-        style={{
-          fontSize: "18px",
-          color: "#666",
-          maxWidth: "500px",
-          marginBottom: "30px",
-        }}
-      >
-        You don't have permission to access this resource. This could be
-        because:
-      </p>
-      <ul
-        style={{
-          textAlign: "left",
-          color: "#666",
-          fontSize: "16px",
-          maxWidth: "400px",
-          marginBottom: "30px",
-          lineHeight: "1.8",
-        }}
-      >
-        <li>You're not logged in</li>
-        <li>You're trying to access someone else's project</li>
-        <li>Your session has expired</li>
-        <li>
-          You're trying to access a page that doesn't match your account state
-        </li>
-      </ul>
-      <div style={{ display: "flex", gap: "15px" }}>
-        <Link
-          href="/login"
-          style={{
-            padding: "12px 24px",
-            background: "#f59e0b",
-            color: "white",
-            textDecoration: "none",
-            borderRadius: "6px",
-            fontWeight: "500",
-            fontSize: "16px",
-          }}
-        >
-          Login
-        </Link>
-        <Link
-          href="/projects"
-          style={{
-            padding: "12px 24px",
-            background: "transparent",
-            color: "#f59e0b",
-            textDecoration: "none",
-            border: "2px solid #f59e0b",
-            borderRadius: "6px",
-            fontWeight: "500",
-            fontSize: "16px",
-          }}
-        >
-          Browse Projects
-        </Link>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="max-w-lg w-full">
+        {/* Error Card */}
+        <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_#000] text-center">
+          {/* Error Code */}
+          <div className="mb-6">
+            <span className="text-8xl font-bold text-[#E67E22]">403</span>
+          </div>
+
+          {/* Title */}
+          <h1 className="text-3xl font-bold mb-4">ACCESO PROHIBIDO</h1>
+
+          {/* Description */}
+          <p className="text-gray-600 mb-6">
+            No tienes permiso para acceder a este recurso. Esto puede deberse a:
+          </p>
+
+          {/* Reasons List */}
+          <div className="bg-[#FDCB6E] border-4 border-black p-4 mb-8 text-left">
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-start gap-2">
+                <span>🔒</span>
+                <span>No has iniciado sesión</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span>🚫</span>
+                <span>Intentas acceder al proyecto de otra persona</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span>⏰</span>
+                <span>Tu sesión ha expirado</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span>⚠️</span>
+                <span>Intentas acceder a una página que no coincide con el estado de tu cuenta</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/login"
+              className="px-6 py-3 bg-[#FDCB6E] border-4 border-black font-bold shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000] transition-shadow"
+            >
+              INICIAR SESIÓN
+            </Link>
+            <Link
+              href="/projects"
+              className="px-6 py-3 bg-white border-4 border-black font-bold hover:bg-gray-100 transition-colors"
+            >
+              VER PROYECTOS
+            </Link>
+          </div>
+        </div>
+
+        {/* Bee decoration */}
+        <div className="text-center mt-8">
+          <span className="text-4xl">🐝</span>
+          <p className="text-gray-500 text-sm mt-2">
+            ¿Perdido? Vuelve a la colmena.
+          </p>
+        </div>
       </div>
     </div>
   );

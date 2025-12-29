@@ -45,20 +45,20 @@ export function useProject(projectId: string) {
         setLoading(true);
         setError(null);
 
-        // Fetch project with cache busting
-        const res = await fetch(`/api/projects/${projectId}?t=${Date.now()}`, {
+        // Fetch project
+        const res = await fetch(`/api/projects/${projectId}`, {
           credentials: "include",
-          cache: "no-store",
+          next: { revalidate: 30 },
         });
 
         if (!res.ok) {
-          throw new Error("Failed to fetch project");
+          throw new Error(`Failed to fetch project (${res.status})`);
         }
 
         const data = await res.json();
         setProject(data.project);
 
-        // Check ownership
+        // Check ownership (solo si hay usuario)
         const {
           data: { user },
         } = await supabase.auth.getUser();
@@ -67,37 +67,38 @@ export function useProject(projectId: string) {
           setIsOwner(true);
         }
 
-        // Fetch gallery images
-        const { data: mediaData } = await supabase
-          .from("project_media")
-          .select("*")
-          .eq("project_id", projectId)
-          .order("order_index", { ascending: true });
+        // Fetch related data in parallel for better performance
+        const [mediaResult, roadmapRes, donationsResult] = await Promise.all([
+          supabase
+            .from("project_media")
+            .select("*")
+            .eq("project_id", projectId)
+            .order("order_index", { ascending: true }),
+          fetch(`/api/projects/${projectId}/roadmap`, {
+            credentials: "include",
+          }),
+          supabase
+            .from("donations")
+            .select("*")
+            .eq("project_id", projectId)
+            .order("created_at", { ascending: false })
+            .limit(10),
+        ]);
 
-        if (mediaData) {
-          setGalleryImages(mediaData as ProjectMedia[]);
+        // Set gallery images
+        if (mediaResult.data) {
+          setGalleryImages(mediaResult.data as ProjectMedia[]);
         }
 
-        // Fetch roadmap
-        const roadmapRes = await fetch(`/api/projects/${projectId}/roadmap`, {
-          credentials: "include",
-        });
-
+        // Set roadmap items
         if (roadmapRes.ok) {
           const roadmapData = await roadmapRes.json();
           setRoadmapItems(roadmapData.items || []);
         }
 
-        // Fetch donations
-        const { data: donationsData } = await supabase
-          .from("donations")
-          .select("*")
-          .eq("project_id", projectId)
-          .order("created_at", { ascending: false })
-          .limit(10);
-
-        if (donationsData) {
-          setDonations(donationsData as Donation[]);
+        // Set donations
+        if (donationsResult.data) {
+          setDonations(donationsResult.data as Donation[]);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load project");

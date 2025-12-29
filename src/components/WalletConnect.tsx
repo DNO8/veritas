@@ -5,6 +5,7 @@ import { useWallet } from "@/lib/hooks/WalletProvider";
 import WalletSelector from "./WalletSelector";
 import WalletDebugger from "./WalletDebugger";
 import { WalletType } from "@/lib/stellar/wallet-types";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function WalletConnect() {
   const {
@@ -23,18 +24,24 @@ export default function WalletConnect() {
 
   if (isLoading) {
     return (
-      <div style={{ padding: "10px" }}>
-        <span style={{ fontSize: "14px", color: "#666" }}>
-          Connecting wallet...
-        </span>
+      <div className="p-4 border-3 border-black bg-[#FDCB6E]/30 mb-4">
+        <div className="flex items-center gap-2">
+          <motion.span
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="text-xl"
+          >
+            🐝
+          </motion.span>
+          <span className="font-mono text-sm">Conectando wallet...</span>
+        </div>
       </div>
     );
   }
 
-  // Show wallet selector
   if (!isConnected && showSelector) {
     return (
-      <div style={{ marginBottom: "20px" }}>
+      <div className="mb-4">
         <WalletSelector
           availableWallets={availableWallets}
           onSelectWallet={async (type) => {
@@ -47,127 +54,61 @@ export default function WalletConnect() {
         />
         <button
           onClick={() => setShowSelector(false)}
-          style={{
-            marginTop: "10px",
-            width: "100%",
-            padding: "10px",
-            background: "#6c757d",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            fontSize: "14px",
-            cursor: "pointer",
-          }}
+          className="mt-3 w-full py-2 border-2 border-black bg-gray-200 font-bold text-sm hover:bg-gray-300 transition-colors"
         >
-          Cancel
+          Cancelar
         </button>
         {error && (
-          <p style={{ marginTop: "10px", color: "#dc2626", fontSize: "14px" }}>
-            {error}
-          </p>
+          <p className="mt-2 text-red-600 text-sm font-mono">{error}</p>
         )}
       </div>
     );
   }
 
-  // Not connected - show connect button
   if (!isConnected) {
     return (
-      <div style={{ marginBottom: "20px" }}>
+      <div className="mb-4">
         <WalletDebugger />
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => setShowSelector(true)}
-          style={{
-            width: "100%",
-            padding: "15px",
-            background: "#0070f3",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            fontSize: "16px",
-            fontWeight: "bold",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "10px",
-          }}
+          className="w-full btn-brutal btn-brutal-dark flex items-center justify-center gap-2"
         >
           <span>🔗</span>
-          Connect Wallet
-        </button>
-        <p
-          style={{
-            marginTop: "10px",
-            fontSize: "12px",
-            color: "#666",
-            textAlign: "center",
-          }}
-        >
-          Supports Freighter, Albedo, and xBull
+          Conectar Wallet
+        </motion.button>
+        <p className="mt-2 text-center font-mono text-xs text-gray-500">
+          Freighter • Albedo • xBull
         </p>
       </div>
     );
   }
 
-  // Connected - show wallet info
   const walletInfo = walletType ? getWalletInfo(walletType) : null;
 
   return (
-    <div
-      style={{
-        padding: "15px",
-        background: "#d4edda",
-        border: "1px solid #28a745",
-        borderRadius: "8px",
-        marginBottom: "20px",
-      }}
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-4 border-3 border-black bg-[#FDCB6E] mb-4"
     >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+      <div className="flex justify-between items-center">
         <div>
-          <p
-            style={{
-              margin: "0 0 5px 0",
-              fontWeight: "bold",
-              color: "#155724",
-            }}
-          >
-            ✅ {walletInfo?.name || "Wallet"} Connected
+          <p className="font-bold text-sm flex items-center gap-2">
+            <span>✅</span> {walletInfo?.name || "Wallet"} conectada
           </p>
-          <p
-            style={{
-              margin: 0,
-              fontSize: "12px",
-              color: "#155724",
-              fontFamily: "monospace",
-            }}
-          >
-            {publicKey?.substring(0, 8)}...
-            {publicKey?.substring(publicKey.length - 8)}
+          <p className="font-mono text-xs mt-1">
+            {publicKey?.substring(0, 8)}...{publicKey?.substring(publicKey.length - 8)}
           </p>
         </div>
         <button
           onClick={disconnect}
-          style={{
-            padding: "8px 16px",
-            background: "transparent",
-            color: "#155724",
-            border: "2px solid #155724",
-            borderRadius: "6px",
-            fontSize: "14px",
-            fontWeight: "500",
-            cursor: "pointer",
-          }}
+          className="px-3 py-1 border-2 border-black bg-white text-sm font-bold hover:bg-black hover:text-white transition-colors"
         >
-          Disconnect
+          Desconectar
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }

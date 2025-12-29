@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase/client";
+import LoadingBee from "@/components/LoadingBee";
+import { useConfirmDialog } from "@/components/ConfirmDialog";
+import { useNotification } from "@/components/NotificationToast";
 
 interface RoadmapItem {
   id: string;
@@ -26,6 +31,8 @@ export default function ManageRoadmapPage() {
     description: "",
     estimatedCost: "",
   });
+  const { showConfirm, ConfirmDialogComponent } = useConfirmDialog();
+  const { showNotification, NotificationContainer } = useNotification();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -48,7 +55,7 @@ export default function ManageRoadmapPage() {
 
         // Verificar ownership
         if (data.project.owner_id !== user.id) {
-          alert("You don't have permission to manage this roadmap");
+          showNotification("No tienes permiso para gestionar este roadmap", "error");
           router.push(`/projects/${params.id}`);
           return;
         }
@@ -65,7 +72,7 @@ export default function ManageRoadmapPage() {
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-        alert("Failed to load roadmap");
+        showNotification("Error al cargar el roadmap", "error");
         router.push("/projects");
       } finally {
         setLoading(false);
@@ -88,14 +95,9 @@ export default function ManageRoadmapPage() {
       const goalAmount = parseFloat(project.goal_amount);
 
       if (newTotal > goalAmount) {
-        alert(
-          `❌ Cannot add item\n\n` +
-            `This would exceed the project goal amount.\n\n` +
-            `Current total: ${currentTotal.toFixed(2)} XLM\n` +
-            `New item cost: ${newItemCost.toFixed(2)} XLM\n` +
-            `New total: ${newTotal.toFixed(2)} XLM\n` +
-            `Goal amount: ${goalAmount.toFixed(2)} XLM\n\n` +
-            `Remaining budget: ${(goalAmount - currentTotal).toFixed(2)} XLM`,
+        showNotification(
+          `No se puede agregar: excedería el monto objetivo. Total actual: ${currentTotal.toFixed(2)} XLM + Nuevo: ${newItemCost.toFixed(2)} XLM = ${newTotal.toFixed(2)} XLM (Meta: ${goalAmount.toFixed(2)} XLM)`,
+          "warning"
         );
         return;
       }
@@ -122,14 +124,14 @@ export default function ManageRoadmapPage() {
         const data = await res.json();
         setItems([...items, data.item]);
         setFormData({ title: "", description: "", estimatedCost: "" });
-        alert("Roadmap item added!");
+        showNotification("¡Hito agregado exitosamente!", "success");
       } else {
         const error = await res.json();
-        alert(`Error: ${error.error}`);
+        showNotification(`Error: ${error.error}`, "error");
       }
     } catch (error) {
       console.error("Error adding item:", error);
-      alert("Failed to add roadmap item");
+      showNotification("Error al agregar hito del roadmap", "error");
     } finally {
       setSaving(false);
     }
@@ -148,14 +150,9 @@ export default function ManageRoadmapPage() {
       const goalAmount = parseFloat(project.goal_amount);
 
       if (newTotal > goalAmount) {
-        alert(
-          `❌ Cannot update item\n\n` +
-            `This would exceed the project goal amount.\n\n` +
-            `Other items total: ${currentTotal.toFixed(2)} XLM\n` +
-            `This item cost: ${newItemCost.toFixed(2)} XLM\n` +
-            `New total: ${newTotal.toFixed(2)} XLM\n` +
-            `Goal amount: ${goalAmount.toFixed(2)} XLM\n\n` +
-            `Remaining budget: ${(goalAmount - currentTotal).toFixed(2)} XLM`,
+        showNotification(
+          `No se puede actualizar: excedería el monto objetivo. Otros items: ${currentTotal.toFixed(2)} XLM + Este: ${newItemCost.toFixed(2)} XLM = ${newTotal.toFixed(2)} XLM (Meta: ${goalAmount.toFixed(2)} XLM)`,
+          "warning"
         );
         return;
       }
@@ -183,21 +180,31 @@ export default function ManageRoadmapPage() {
         setItems(items.map((item) => (item.id === itemId ? data.item : item)));
         setEditingId(null);
         setFormData({ title: "", description: "", estimatedCost: "" });
-        alert("Roadmap item updated!");
+        showNotification("¡Hito actualizado exitosamente!", "success");
       } else {
         const error = await res.json();
-        alert(`Error: ${error.error}`);
+        showNotification(`Error: ${error.error}`, "error");
       }
     } catch (error) {
       console.error("Error updating item:", error);
-      alert("Failed to update roadmap item");
+      showNotification("Error al actualizar hito del roadmap", "error");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (itemId: string) => {
-    if (!confirm("Are you sure you want to delete this roadmap item?")) {
+    const confirmed = await showConfirm(
+      "Eliminar hito",
+      "¿Estás seguro de que quieres eliminar este hito del roadmap? Esta acción no se puede deshacer.",
+      {
+        confirmText: "Eliminar",
+        cancelText: "Cancelar",
+        type: "danger",
+      }
+    );
+    
+    if (!confirmed) {
       return;
     }
 
@@ -212,14 +219,14 @@ export default function ManageRoadmapPage() {
 
       if (res.ok) {
         setItems(items.filter((item) => item.id !== itemId));
-        alert("Roadmap item deleted!");
+        showNotification("¡Hito eliminado exitosamente!", "success");
       } else {
         const error = await res.json();
-        alert(`Error: ${error.error}`);
+        showNotification(`Error: ${error.error}`, "error");
       }
     } catch (error) {
       console.error("Error deleting item:", error);
-      alert("Failed to delete roadmap item");
+      showNotification("Error al eliminar hito del roadmap", "error");
     }
   };
 
@@ -238,428 +245,258 @@ export default function ManageRoadmapPage() {
   };
 
   if (loading) {
-    return <div style={{ padding: "20px" }}>Loading...</div>;
+    return <LoadingBee text="Cargando roadmap..." />;
   }
 
   if (!project) {
-    return <div style={{ padding: "20px" }}>Project not found</div>;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white border-4 border-black p-8 shadow-[6px_6px_0px_#000] text-center">
+          <p className="text-xl font-bold mb-4">Proyecto no encontrado</p>
+          <Link href="/projects" className="btn-brutal btn-brutal-primary">
+            Ver Proyectos
+          </Link>
+        </div>
+      </div>
+    );
   }
 
+  const currentTotal = items.reduce((sum, item) => sum + parseFloat(item.estimated_cost || "0"), 0);
+  const goalAmount = project.goal_amount ? parseFloat(project.goal_amount) : 0;
+  const remaining = goalAmount - currentTotal;
+  const percentage = goalAmount > 0 ? (currentTotal / goalAmount) * 100 : 0;
+
   return (
-    <div style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}>
-      <div style={{ marginBottom: "30px" }}>
-        <button
-          onClick={() => router.push(`/projects/${params.id}`)}
-          style={{
-            padding: "8px 16px",
-            background: "#f0f0f0",
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontSize: "14px",
-          }}
+    <>
+      {ConfirmDialogComponent}
+      {NotificationContainer}
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
         >
-          ← Back to Project
-        </button>
-      </div>
-
-      <h1>Manage Roadmap</h1>
-      <p style={{ color: "#666", marginBottom: "10px" }}>
-        Project: <strong>{project.title}</strong>
-      </p>
-
-      {/* Budget Summary */}
-      {project.goal_amount && (
-        <div
-          style={{
-            padding: "15px",
-            background: (() => {
-              const currentTotal = items.reduce((sum, item) => {
-                return sum + parseFloat(item.estimated_cost || "0");
-              }, 0);
-              const goalAmount = parseFloat(project.goal_amount);
-              const percentage = (currentTotal / goalAmount) * 100;
-
-              if (percentage >= 100) return "#f8d7da";
-              if (percentage >= 80) return "#fff3cd";
-              return "#d4edda";
-            })(),
-            border: "1px solid",
-            borderColor: (() => {
-              const currentTotal = items.reduce((sum, item) => {
-                return sum + parseFloat(item.estimated_cost || "0");
-              }, 0);
-              const goalAmount = parseFloat(project.goal_amount);
-              const percentage = (currentTotal / goalAmount) * 100;
-
-              if (percentage >= 100) return "#f5c6cb";
-              if (percentage >= 80) return "#ffc107";
-              return "#c3e6cb";
-            })(),
-            borderRadius: "8px",
-            marginBottom: "30px",
-          }}
-        >
-          {(() => {
-            const currentTotal = items.reduce((sum, item) => {
-              return sum + parseFloat(item.estimated_cost || "0");
-            }, 0);
-            const goalAmount = parseFloat(project.goal_amount);
-            const remaining = goalAmount - currentTotal;
-            const percentage = (currentTotal / goalAmount) * 100;
-
-            return (
-              <>
-                <div style={{ marginBottom: "10px" }}>
-                  <strong>Budget Overview:</strong>
-                </div>
-                <div style={{ fontSize: "14px" }}>
-                  <p style={{ margin: "5px 0" }}>
-                    💰 Goal Amount: <strong>{goalAmount.toFixed(2)} XLM</strong>
-                  </p>
-                  <p style={{ margin: "5px 0" }}>
-                    📊 Allocated: <strong>{currentTotal.toFixed(2)} XLM</strong>{" "}
-                    ({percentage.toFixed(1)}%)
-                  </p>
-                  <p style={{ margin: "5px 0" }}>
-                    {remaining >= 0 ? "✅" : "❌"} Remaining:{" "}
-                    <strong>{remaining.toFixed(2)} XLM</strong>
-                  </p>
-                </div>
-                {percentage >= 100 && (
-                  <p
-                    style={{
-                      margin: "10px 0 0 0",
-                      fontSize: "13px",
-                      color: "#721c24",
-                    }}
-                  >
-                    ⚠️ Budget limit reached. Remove or reduce items to add more.
-                  </p>
-                )}
-                {percentage >= 80 && percentage < 100 && (
-                  <p
-                    style={{
-                      margin: "10px 0 0 0",
-                      fontSize: "13px",
-                      color: "#856404",
-                    }}
-                  >
-                    ⚠️ Approaching budget limit. Only {remaining.toFixed(2)} XLM
-                    remaining.
-                  </p>
-                )}
-              </>
-            );
-          })()}
-        </div>
-      )}
-
-      {/* Add/Edit Form */}
-      <div
-        style={{
-          background: "#f9f9f9",
-          padding: "20px",
-          borderRadius: "8px",
-          marginBottom: "30px",
-        }}
-      >
-        <h2 style={{ marginTop: 0 }}>
-          {editingId ? "Edit Roadmap Item" : "Add New Roadmap Item"}
-        </h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (editingId) {
-              handleUpdate(editingId);
-            } else {
-              handleAdd(e);
-            }
-          }}
-        >
-          <div style={{ marginBottom: "15px" }}>
-            <label
-              htmlFor="title"
-              style={{
-                display: "block",
-                marginBottom: "5px",
-                fontWeight: "500",
-              }}
-            >
-              Title *
-            </label>
-            <input
-              id="title"
-              type="text"
-              required
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
-              placeholder="Phase 1: Development"
-              style={{
-                width: "100%",
-                padding: "10px",
-                fontSize: "16px",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: "15px" }}>
-            <label
-              htmlFor="description"
-              style={{
-                display: "block",
-                marginBottom: "5px",
-                fontWeight: "500",
-              }}
-            >
-              Description
-            </label>
-            <textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="Describe what will be accomplished in this phase..."
-              rows={3}
-              style={{
-                width: "100%",
-                padding: "10px",
-                fontSize: "16px",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-                fontFamily: "inherit",
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: "15px" }}>
-            <label
-              htmlFor="estimatedCost"
-              style={{
-                display: "block",
-                marginBottom: "5px",
-                fontWeight: "500",
-              }}
-            >
-              Estimated Cost (XLM)
-              {project.goal_amount && (
-                <span
-                  style={{
-                    fontSize: "12px",
-                    color: "#666",
-                    fontWeight: "normal",
-                  }}
-                >
-                  {" "}
-                  (Max: {(() => {
-                    const currentTotal = items.reduce((sum, item) => {
-                      if (editingId && item.id === editingId) return sum;
-                      return sum + parseFloat(item.estimated_cost || "0");
-                    }, 0);
-                    const goalAmount = parseFloat(project.goal_amount);
-                    const remaining = goalAmount - currentTotal;
-                    return remaining.toFixed(2);
-                  })()} XLM)
-                </span>
-              )}
-            </label>
-            <input
-              id="estimatedCost"
-              type="number"
-              step="0.01"
-              min="0"
-              max={
-                project.goal_amount
-                  ? (() => {
-                      const currentTotal = items.reduce((sum, item) => {
-                        if (editingId && item.id === editingId) return sum;
-                        return sum + parseFloat(item.estimated_cost || "0");
-                      }, 0);
-                      const goalAmount = parseFloat(project.goal_amount);
-                      return goalAmount - currentTotal;
-                    })()
-                  : undefined
-              }
-              value={formData.estimatedCost}
-              onChange={(e) =>
-                setFormData({ ...formData, estimatedCost: e.target.value })
-              }
-              placeholder="1000"
-              style={{
-                width: "100%",
-                padding: "10px",
-                fontSize: "16px",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-              }}
-            />
-          </div>
-
-          <div style={{ display: "flex", gap: "10px" }}>
-            <button
-              type="submit"
-              disabled={saving}
-              style={{
-                padding: "10px 20px",
-                background: saving ? "#ccc" : "#28a745",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: saving ? "not-allowed" : "pointer",
-                fontWeight: "500",
-              }}
-            >
-              {saving ? "Saving..." : editingId ? "Update Item" : "Add Item"}
-            </button>
-            {editingId && (
-              <button
-                type="button"
-                onClick={cancelEdit}
-                style={{
-                  padding: "10px 20px",
-                  background: "white",
-                  color: "#666",
-                  border: "1px solid #ddd",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                  fontWeight: "500",
-                }}
-              >
-                Cancel
-              </button>
-            )}
-          </div>
-        </form>
-      </div>
-
-      {/* Roadmap Items List */}
-      <div>
-        <h2>Current Roadmap ({items.length} items)</h2>
-        {items.length === 0 ? (
-          <div
-            style={{
-              padding: "40px",
-              textAlign: "center",
-              background: "#f9f9f9",
-              borderRadius: "8px",
-              color: "#666",
-            }}
+          <Link
+            href={`/projects/${params.id}`}
+            className="inline-flex items-center gap-2 text-sm font-bold hover:underline mb-4"
           >
-            <p style={{ fontSize: "18px", marginBottom: "10px" }}>
-              📋 No roadmap items yet
-            </p>
-            <p style={{ fontSize: "14px" }}>
-              Add your first roadmap item to show donors your project plan
-            </p>
-          </div>
-        ) : (
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "15px" }}
+            ← VOLVER AL PROYECTO
+          </Link>
+          <h1 className="text-4xl font-bold">GESTIONAR ROADMAP</h1>
+          <p className="text-gray-500 mt-2">
+            Proyecto: <strong>{project.title}</strong>
+          </p>
+        </motion.div>
+
+        {/* Budget Summary */}
+        {project.goal_amount && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className={`border-4 border-black p-6 shadow-[6px_6px_0px_#000] mb-8 ${
+              percentage >= 100
+                ? "bg-red-100"
+                : percentage >= 80
+                  ? "bg-[#FDCB6E]"
+                  : "bg-green-100"
+            }`}
           >
-            {items.map((item, index) => (
-              <div
-                key={item.id}
-                style={{
-                  background: "white",
-                  border: "1px solid #ddd",
-                  borderRadius: "8px",
-                  padding: "20px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        marginBottom: "10px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          background: "#0070f3",
-                          color: "white",
-                          width: "30px",
-                          height: "30px",
-                          borderRadius: "50%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontWeight: "bold",
-                          fontSize: "14px",
-                        }}
-                      >
-                        {index + 1}
-                      </span>
-                      <h3 style={{ margin: 0 }}>{item.title}</h3>
-                    </div>
-                    {item.description && (
-                      <p style={{ color: "#666", margin: "10px 0" }}>
-                        {item.description}
-                      </p>
-                    )}
-                    {item.estimated_cost && (
-                      <p
-                        style={{
-                          color: "#28a745",
-                          fontWeight: "500",
-                          margin: "10px 0 0 0",
-                        }}
-                      >
-                        💰 Estimated Cost: {item.estimated_cost} XLM
-                      </p>
-                    )}
-                  </div>
-                  <div
-                    style={{ display: "flex", gap: "10px", marginLeft: "20px" }}
-                  >
-                    <button
-                      onClick={() => startEdit(item)}
-                      style={{
-                        padding: "8px 16px",
-                        background: "#0070f3",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontSize: "14px",
-                      }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      style={{
-                        padding: "8px 16px",
-                        background: "#dc3545",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontSize: "14px",
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
+            <h3 className="font-bold text-lg mb-4">📊 RESUMEN DE PRESUPUESTO</h3>
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div className="bg-white border-2 border-black p-3 text-center">
+                <p className="text-2xl font-bold">${goalAmount.toFixed(0)}</p>
+                <p className="text-xs text-gray-500">Meta</p>
               </div>
-            ))}
-          </div>
+              <div className="bg-white border-2 border-black p-3 text-center">
+                <p className="text-2xl font-bold text-[#E67E22]">${currentTotal.toFixed(0)}</p>
+                <p className="text-xs text-gray-500">Asignado ({percentage.toFixed(0)}%)</p>
+              </div>
+              <div className="bg-white border-2 border-black p-3 text-center">
+                <p className={`text-2xl font-bold ${remaining >= 0 ? "text-green-600" : "text-red-600"}`}>
+                  ${remaining.toFixed(0)}
+                </p>
+                <p className="text-xs text-gray-500">Restante</p>
+              </div>
+            </div>
+            {/* Progress Bar */}
+            <div className="h-4 bg-white border-2 border-black">
+              <div
+                className={`h-full ${percentage >= 100 ? "bg-red-400" : "bg-[#FDCB6E]"}`}
+                style={{ width: `${Math.min(percentage, 100)}%` }}
+              />
+            </div>
+            {percentage >= 100 && (
+              <p className="text-sm text-red-700 mt-2 font-bold">
+                ⚠️ Límite de presupuesto alcanzado
+              </p>
+            )}
+          </motion.div>
         )}
+
+        {/* Add/Edit Form */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_#000] mb-8"
+        >
+          <h2 className="text-xl font-bold mb-6 pb-4 border-b-4 border-black">
+            {editingId ? "✏️ EDITAR HITO" : "➕ AGREGAR NUEVO HITO"}
+          </h2>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (editingId) {
+                handleUpdate(editingId);
+              } else {
+                handleAdd(e);
+              }
+            }}
+            className="space-y-4"
+          >
+            <div>
+              <label className="block font-bold text-sm mb-2 uppercase">
+                Título *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Fase 1: Desarrollo"
+                className="w-full px-4 py-3 border-4 border-black focus:outline-none focus:ring-2 focus:ring-[#FDCB6E]"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-sm mb-2 uppercase">
+                Descripción
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Describe lo que se logrará en esta fase..."
+                rows={3}
+                className="w-full px-4 py-3 border-4 border-black focus:outline-none focus:ring-2 focus:ring-[#FDCB6E] resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-sm mb-2 uppercase">
+                Costo Estimado
+                {project.goal_amount && (
+                  <span className="text-xs text-gray-500 font-normal ml-2">
+                    (Máx: ${remaining.toFixed(0)})
+                  </span>
+                )}
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.estimatedCost}
+                  onChange={(e) => setFormData({ ...formData, estimatedCost: e.target.value })}
+                  placeholder="1000"
+                  className="w-full pl-10 pr-4 py-3 border-4 border-black focus:outline-none focus:ring-2 focus:ring-[#FDCB6E]"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex-1 py-3 bg-[#FDCB6E] border-4 border-black font-bold shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000] transition-shadow disabled:opacity-50"
+              >
+                {saving ? "GUARDANDO..." : editingId ? "ACTUALIZAR" : "AGREGAR HITO"}
+              </button>
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={cancelEdit}
+                  className="py-3 px-6 bg-white border-4 border-black font-bold hover:bg-gray-100"
+                >
+                  CANCELAR
+                </button>
+              )}
+            </div>
+          </form>
+        </motion.div>
+
+        {/* Roadmap Items List */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <h2 className="text-2xl font-bold mb-4">
+            ROADMAP ACTUAL ({items.length} hitos)
+          </h2>
+          
+          {items.length === 0 ? (
+            <div className="bg-[#FDCB6E] border-4 border-black p-8 shadow-[6px_6px_0px_#000] text-center">
+              <div className="text-5xl mb-4">📋</div>
+              <h3 className="font-bold text-xl mb-2">Sin hitos aún</h3>
+              <p className="text-black/70">
+                Agrega tu primer hito para mostrar a los donantes el plan de tu proyecto
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {items.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white border-4 border-black p-5 shadow-[4px_4px_0px_#000]"
+                >
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="w-8 h-8 bg-[#FDCB6E] border-2 border-black flex items-center justify-center font-bold text-sm">
+                          {index + 1}
+                        </span>
+                        <h3 className="font-bold text-lg">{item.title}</h3>
+                      </div>
+                      {item.description && (
+                        <p className="text-gray-600 text-sm mb-2 ml-11">
+                          {item.description}
+                        </p>
+                      )}
+                      {item.estimated_cost && (
+                        <p className="text-[#E67E22] font-bold ml-11">
+                          💰 ${item.estimated_cost}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => startEdit(item)}
+                        className="px-3 py-2 bg-white border-2 border-black font-bold text-sm hover:bg-gray-100"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="px-3 py-2 bg-red-100 border-2 border-red-500 text-red-600 font-bold text-sm hover:bg-red-200"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </motion.div>
       </div>
     </div>
+    </>
   );
 }

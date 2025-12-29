@@ -3,6 +3,7 @@
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { locales } from "@/i18n/config";
+import { motion } from "framer-motion";
 
 export default function LanguageSwitcher() {
   const locale = useLocale();
@@ -10,35 +11,28 @@ export default function LanguageSwitcher() {
   const pathname = usePathname();
 
   const switchLocale = (newLocale: string) => {
-    // Remover el locale actual del pathname
     const pathnameWithoutLocale = pathname.replace(`/${locale}`, "");
-
-    // Construir nueva ruta con el nuevo locale (siempre incluir locale)
     const newPath = `/${newLocale}${pathnameWithoutLocale || "/"}`;
-
     router.push(newPath);
   };
 
   return (
-    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+    <div className="flex gap-1">
       {locales.map((loc) => (
-        <button
+        <motion.button
           key={loc}
+          whileHover={{ scale: locale === loc ? 1 : 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => switchLocale(loc)}
           disabled={locale === loc}
-          style={{
-            padding: "5px 10px",
-            background: locale === loc ? "#0070f3" : "transparent",
-            color: locale === loc ? "white" : "#666",
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-            cursor: locale === loc ? "not-allowed" : "pointer",
-            fontSize: "14px",
-            fontWeight: locale === loc ? "600" : "400",
-          }}
+          className={`px-3 py-1.5 font-mono text-xs font-bold uppercase border-2 border-black transition-colors ${
+            locale === loc
+              ? "bg-black text-[#FDCB6E] cursor-default"
+              : "bg-white text-black hover:bg-[#FDCB6E] cursor-pointer"
+          }`}
         >
-          {loc.toUpperCase()}
-        </button>
+          {loc}
+        </motion.button>
       ))}
     </div>
   );

@@ -1,26 +1,331 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Colmena - Neobrutalismo Abeja */
+  --color-primary: #fdcb6e;
+  --color-secondary: #e67e22;
+  --color-accent: #000000;
+  --color-background: #ffffff;
+  --color-foreground: #000000;
+
+  /* Shadows & Borders */
+  --shadow-brutal: 6px 6px 0px #000000;
+  --shadow-brutal-sm: 4px 4px 0px #000000;
+  --shadow-brutal-lg: 8px 8px 0px #000000;
+  --shadow-brutal-hover: 8px 8px 0px #000000;
+  --border-brutal: 3px solid #000000;
+  --border-brutal-thick: 4px solid #000000;
+
+  /* Fonts */
+  --font-heading: var(--font-space-grotesk), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
+
+  /* Spacing */
+  --radius-brutal: 0px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: #fdcb6e;
+  --color-secondary: #e67e22;
+  --color-accent: #000000;
+  --color-background: #ffffff;
+  --color-foreground: #000000;
+  --font-sans: var(--font-space-grotesk);
+  --font-mono: var(--font-jetbrains-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-heading);
+  line-height: 1.6;
+}
+
+/* Brutalist Button Base */
+.btn-brutal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 16px;
+  border: var(--border-brutal-thick);
+  box-shadow: var(--shadow-brutal);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.btn-brutal:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-brutal-hover);
+}
+
+.btn-brutal:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #000000;
+}
+
+.btn-brutal-primary {
+  background: var(--color-primary);
+  color: var(--color-accent);
+}
+
+.btn-brutal-secondary {
+  background: var(--color-secondary);
+  color: #ffffff;
+}
+
+.btn-brutal-outline {
+  background: transparent;
+  color: var(--color-accent);
+}
+
+.btn-brutal-dark {
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+/* Brutalist Card */
+.card-brutal {
+  background: var(--color-background);
+  border: var(--border-brutal-thick);
+  box-shadow: var(--shadow-brutal);
+  transition: all 0.2s ease;
+}
+
+.card-brutal:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: var(--shadow-brutal-lg);
+}
+
+/* Brutalist Input */
+.input-brutal {
+  width: 100%;
+  padding: 14px 16px;
+  font-family: var(--font-heading);
+  font-size: 16px;
+  border: var(--border-brutal);
+  background: var(--color-background);
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.input-brutal:focus {
+  box-shadow: var(--shadow-brutal-sm);
+  transform: translate(-2px, -2px);
+}
+
+/* Brutalist Badge */
+.badge-brutal {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 2px solid var(--color-accent);
+}
+
+.badge-brutal-primary {
+  background: var(--color-primary);
+  color: var(--color-accent);
+}
+
+.badge-brutal-secondary {
+  background: var(--color-secondary);
+  color: #ffffff;
+}
+
+/* Masonry Grid - Pinterest Style */
+.masonry-grid {
+  column-count: 2;
+  column-gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .masonry-grid {
+    column-count: 2;
+    column-gap: 16px;
+  }
+}
+
+@media (min-width: 768px) {
+  .masonry-grid {
+    column-count: 3;
+    column-gap: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .masonry-grid {
+    column-count: 3;
+    column-gap: 24px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .masonry-grid {
+    column-count: 4;
+    column-gap: 24px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .masonry-grid {
+    column-count: 5;
+    column-gap: 28px;
+  }
+}
+
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 12px;
+  display: inline-block;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .masonry-item {
+    margin-bottom: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .masonry-item {
+    margin-bottom: 24px;
+  }
+}
+
+/* Pinterest Card Styles */
+.pinterest-card {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.pinterest-card:hover {
+  transform: translateY(-4px);
+}
+
+.pinterest-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Badge Brutal Styles */
+.badge-brutal {
+  display: inline-block;
+  padding: 4px 8px;
+  font-weight: bold;
+  border: 2px solid #000;
+  background: #fff;
+  box-shadow: 2px 2px 0px #000;
+}
+
+.badge-brutal-primary {
+  background: #fdcb6e;
+}
+
+.badge-brutal-secondary {
+  background: #e8e8e8;
+}
+
+/* Hexagon Pattern Background */
+.hex-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23FDCB6E' fill-opacity='0.1'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Hexagon Pattern White (for yellow backgrounds) */
+.hex-pattern-white {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23FFFFFF' fill-opacity='0.6'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Animations */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow:
+      var(--shadow-brutal),
+      0 0 0 0 rgba(253, 203, 110, 0.4);
+  }
+  50% {
+    box-shadow:
+      var(--shadow-brutal),
+      0 0 20px 10px rgba(253, 203, 110, 0.2);
+  }
+}
+
+@keyframes gradient-wave {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+  border-left: var(--border-brutal);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border: 2px solid var(--color-accent);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
 }

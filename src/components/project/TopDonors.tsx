@@ -1,5 +1,9 @@
 "use client";
 
+import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
+import { gsap } from "gsap";
+
 interface Donation {
   id: string;
   donor_wallet: string;
@@ -22,8 +26,57 @@ interface TopDonorsProps {
   limit?: number;
 }
 
+function AnimatedAmount({ amount }: { amount: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const text = `${amount} XLM`;
+    const chars = text.split("");
+
+    containerRef.current.innerHTML = chars
+      .map(
+        (char) =>
+          `<span class="char" style="display: inline-block; opacity: 0; background: linear-gradient(to right, #E67E22, #FDCB6E, #E67E22); background-size: 200% 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">${char === " " ? "&nbsp;" : char}</span>`,
+      )
+      .join("");
+
+    const charElements = containerRef.current.querySelectorAll(".char");
+
+    gsap.fromTo(
+      charElements,
+      {
+        opacity: 0,
+        y: 20,
+        scale: 0.5,
+      },
+      {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        duration: 0.5,
+        stagger: 0.05,
+        ease: "back.out(1.7)",
+      },
+    );
+
+    gsap.to(charElements, {
+      backgroundPosition: "200% center",
+      duration: 3,
+      repeat: -1,
+      ease: "linear",
+      stagger: {
+        each: 0.1,
+        repeat: -1,
+      },
+    });
+  }, [amount]);
+
+  return <div ref={containerRef} className="font-bold text-2xl" />;
+}
+
 export default function TopDonors({ donations, limit = 5 }: TopDonorsProps) {
-  // Aggregate donations by donor wallet
   const donorStats = donations.reduce(
     (acc, donation) => {
       const wallet = donation.donor_wallet;
@@ -41,7 +94,6 @@ export default function TopDonors({ donations, limit = 5 }: TopDonorsProps) {
       acc[wallet].totalAmount += amount;
       acc[wallet].donationCount += 1;
 
-      // Keep the most recent donation date
       if (new Date(donation.created_at) > new Date(acc[wallet].lastDonation)) {
         acc[wallet].lastDonation = donation.created_at;
       }
@@ -51,7 +103,6 @@ export default function TopDonors({ donations, limit = 5 }: TopDonorsProps) {
     {} as Record<string, DonorStats>,
   );
 
-  // Convert to array and sort by total amount
   const topDonors = Object.values(donorStats)
     .sort((a, b) => b.totalAmount - a.totalAmount)
     .slice(0, limit);
@@ -60,124 +111,86 @@ export default function TopDonors({ donations, limit = 5 }: TopDonorsProps) {
     return null;
   }
 
+  const getRankStyle = (index: number) => {
+    if (index === 0)
+      return "bg-gradient-to-br from-black via-gray-900 to-black border-[#FDCB6E]";
+    if (index === 1) return "bg-gray-200 border-gray-600";
+    if (index === 2) return "bg-orange-200 border-orange-400";
+    return "bg-white border-black";
+  };
+
+  const getRankEmoji = (index: number) => {
+    if (index === 0) return "🥇";
+    if (index === 1) return "🥈";
+    if (index === 2) return "🥉";
+    return `#${index + 1}`;
+  };
+
   return (
-    <div
-      style={{
-        marginTop: "30px",
-        padding: "20px",
-        background: "#f9f9f9",
-        borderRadius: "8px",
-      }}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="card-brutal p-6 bg-white"
     >
-      <h2 style={{ marginBottom: "15px" }}>🏆 Top Donors</h2>
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+      <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+        <span>🏆</span> Top Donadores
+      </h2>
+      <div className="space-y-3">
         {topDonors.map((donor, index) => (
-          <div
+          <motion.div
             key={donor.wallet}
-            style={{
-              padding: "15px",
-              background: "white",
-              borderRadius: "8px",
-              border: "1px solid #e0e0e0",
-              display: "flex",
-              alignItems: "center",
-              gap: "15px",
-            }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className={`p-4 border-3 ${getRankStyle(index)} flex items-center gap-4`}
           >
-            {/* Rank Badge */}
-            <div
-              style={{
-                width: "40px",
-                height: "40px",
-                borderRadius: "50%",
-                background:
-                  index === 0
-                    ? "linear-gradient(135deg, #FFD700, #FFA500)"
-                    : index === 1
-                      ? "linear-gradient(135deg, #C0C0C0, #A8A8A8)"
-                      : index === 2
-                        ? "linear-gradient(135deg, #CD7F32, #8B4513)"
-                        : "#e0e0e0",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: "bold",
-                fontSize: "18px",
-                color: index < 3 ? "white" : "#666",
-                flexShrink: 0,
-              }}
-            >
-              {index === 0
-                ? "🥇"
-                : index === 1
-                  ? "🥈"
-                  : index === 2
-                    ? "🥉"
-                    : index + 1}
+            {/* Rank */}
+            <div className="w-10 h-10 border-3 border-black bg-white flex items-center justify-center font-bold text-lg flex-shrink-0">
+              {getRankEmoji(index)}
             </div>
 
             {/* Donor Info */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p
-                style={{
-                  margin: "0 0 5px 0",
-                  fontWeight: "500",
-                  fontSize: "14px",
-                  color: "#333",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {donor.wallet.substring(0, 8)}...
-                {donor.wallet.substring(donor.wallet.length - 8)}
-              </p>
-              <p style={{ margin: 0, fontSize: "12px", color: "#666" }}>
-                {donor.donationCount} donation
-                {donor.donationCount !== 1 ? "s" : ""}
+            <div className="flex-1 min-w-0">
+              {index === 0 ? (
+                <p className="text-[#FDCB6E] font-mono text-sm truncate">
+                  {donor.wallet.substring(0, 8)}...
+                  {donor.wallet.substring(donor.wallet.length - 8)}
+                </p>
+              ) : (
+                <p className="font-mono text-sm truncate">
+                  {donor.wallet.substring(0, 8)}...
+                  {donor.wallet.substring(donor.wallet.length - 8)}
+                </p>
+              )}
+              <p className="text-xs text-gray-400">
+                {donor.donationCount} donación
+                {donor.donationCount !== 1 ? "es" : ""}
               </p>
             </div>
 
-            {/* Total Amount */}
-            <div style={{ textAlign: "right", flexShrink: 0 }}>
-              <p
-                style={{
-                  margin: "0 0 3px 0",
-                  fontWeight: "bold",
-                  fontSize: "18px",
-                  color:
-                    index === 0
-                      ? "#FFD700"
-                      : index === 1
-                        ? "#C0C0C0"
-                        : index === 2
-                          ? "#CD7F32"
-                          : "#0070f3",
-                }}
-              >
-                {donor.totalAmount.toFixed(2)} XLM
-              </p>
-              <p style={{ margin: 0, fontSize: "11px", color: "#999" }}>
-                Last: {new Date(donor.lastDonation).toLocaleDateString()}
+            {/* Amount */}
+            <div className="text-right flex-shrink-0">
+              {index === 0 ? (
+                <AnimatedAmount amount={donor.totalAmount.toFixed(2)} />
+              ) : (
+                <p className="font-bold text-lg text-black">
+                  {donor.totalAmount.toFixed(2)} XLM
+                </p>
+              )}
+              <p className="font-mono text-xs text-gray-400">
+                {new Date(donor.lastDonation).toLocaleDateString()}
               </p>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
       {topDonors.length >= limit && donations.length > limit && (
-        <p
-          style={{
-            marginTop: "15px",
-            marginBottom: 0,
-            fontSize: "13px",
-            color: "#666",
-            textAlign: "center",
-          }}
-        >
-          Showing top {limit} of {Object.keys(donorStats).length} unique donors
+        <p className="mt-4 text-center font-mono text-xs text-gray-500">
+          Mostrando top {limit} de {Object.keys(donorStats).length} donadores
+          únicos
         </p>
       )}
-    </div>
+    </motion.div>
   );
 }

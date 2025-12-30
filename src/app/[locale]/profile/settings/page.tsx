@@ -53,7 +53,7 @@ export default function ProfileSettingsPage() {
           setName(profile.name || "");
         }
       } catch (error) {
-        console.error("Error fetching user:", error);
+        
       } finally {
         setLoading(false);
       }
@@ -78,7 +78,7 @@ export default function ProfileSettingsPage() {
       setMessage({ type: "success", text: "Perfil actualizado correctamente" });
       setUser({ ...user, name });
     } catch (error) {
-      console.error("Error updating profile:", error);
+      
       setMessage({ type: "error", text: "Error al actualizar el perfil" });
     } finally {
       setSaving(false);

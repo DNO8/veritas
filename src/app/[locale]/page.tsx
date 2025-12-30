@@ -99,7 +99,7 @@ export default function Home() {
           setFilteredProjects(data as Project[]);
         }
       } catch (error) {
-        console.error("Error fetching projects:", error);
+        
       } finally {
         setLoading(false);
       }

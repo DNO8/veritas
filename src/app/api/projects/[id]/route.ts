@@ -26,20 +26,16 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    console.log("[API /projects/[id]] Fetching project:", id);
+    
 
     const project = await getProjectById(id);
 
     if (!project) {
-      console.log("[API /projects/[id]] Project not found:", id);
+      
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    console.log("[API /projects/[id]] Project found:", {
-      id: project.id,
-      status: project.status,
-      owner_id: project.owner_id,
-    });
+    
 
     // Verificar si el proyecto es público o si el usuario es el owner
     const supabase = await createServerSupabaseClient();
@@ -47,7 +43,7 @@ export async function GET(
       data: { user },
     } = await supabase.auth.getUser();
 
-    console.log("[API /projects/[id]] User:", user?.id || "anonymous");
+    
 
     // Permitir acceso si:
     // 1. El proyecto está publicado (público)
@@ -55,21 +51,17 @@ export async function GET(
     const isOwner = user && project.owner_id === user.id;
     const isPublished = project.status === "published";
 
-    console.log("[API /projects/[id]] Access check:", {
-      isOwner,
-      isPublished,
-      allowed: isPublished || isOwner,
-    });
+    
 
     if (!isPublished && !isOwner) {
-      console.log("[API /projects/[id]] Access denied");
+      
       return NextResponse.json(
         { error: "Project not found or not accessible" },
         { status: 404 },
       );
     }
 
-    console.log("[API /projects/[id]] Returning project data");
+    
     return NextResponse.json(
       { project },
       {
@@ -83,7 +75,7 @@ export async function GET(
       },
     );
   } catch (error) {
-    console.error("[API /projects/[id]] Error:", error);
+    
     return NextResponse.json(
       {
         error:

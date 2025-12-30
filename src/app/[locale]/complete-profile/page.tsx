@@ -116,7 +116,7 @@ export default function CompleteProfilePage() {
       showNotification("¡Perfil completado exitosamente!", "success");
       router.push("/projects");
     } catch (error) {
-      console.error("Error updating profile:", error);
+      
       showNotification(
         `Error: ${error instanceof Error ? error.message : "Error al actualizar perfil"}`,
         "error"

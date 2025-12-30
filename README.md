@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🌟 Colmena Crownfunding
+# 🐝 Colmena Crowdfunding
 
-### Plataforma de Crowdfunding Transparente Construida sobre Stellar
+### Crowdfunding Transparente con Recompensas Digitales sobre Stellar
 
 [![Stellar](https://img.shields.io/badge/Stellar-Blockchain-7D00FF?style=for-the-badge&logo=stellar)](https://stellar.org)
 [![Next.js](https://img.shields.io/badge/Next.js-16.1-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
@@ -11,28 +11,212 @@
 
 **Presentación para Stellar Ideathon 2026**
 
-[Demo](#) • [Documentación](#-características) • [Contribuir](#-cómo-contribuir)
+[Demo](#) • [El Problema](#-el-problema) • [La Solución](#-la-solución-colmena) • [Por qué Stellar](#-por-qué-stellar)
 
 </div>
 
 ---
 
-## 📖 Acerca de
+## 😰 El Problema
 
-**VERITAS** es una plataforma descentralizada de crowdfunding que permite a **proyectos, startups, PYMEs e individuos** recibir donaciones transparentes utilizando la **blockchain de Stellar**. Construida para el [Stellar Ideathon 2026](https://dorahacks.io/hackathon/ideaton2026/detail), VERITAS combina la accesibilidad de Web2 con la transparencia de Web3.
+### El Dolor de los Creadores
 
-### 🎯 Misión
+Los **proyectos, startups, PYMEs y creadores independientes** enfrentan barreras masivas al intentar financiar sus ideas:
 
-Hacer que las donaciones basadas en blockchain sean accesibles para todos, independientemente de su experiencia con criptomonedas, manteniendo total transparencia y cero custodia de fondos.
+#### 💸 **Plataformas Tradicionales (Kickstarter, Indiegogo)**
+- **Comisiones abusivas**: 5-10% + fees de procesamiento de pago (3-5%)
+- **Retención de fondos**: Hasta 14 días para recibir el dinero
+- **Restricciones geográficas**: Muchos países de LATAM no tienen acceso
+- **Falta de transparencia**: Los backers no pueden verificar el uso de fondos
+- **Sin recompensas verificables**: Los beneficios prometidos no son auditables
 
-### ✨ ¿Por qué Stellar?
+#### 🏦 **Barreras de Entrada**
+- Requieren cuentas bancarias corporativas
+- Procesos de verificación largos y complejos
+- Exclusión de proyectos pequeños o informales
+- Sin acceso para personas sin historial crediticio
 
-- ⚡ **Transacciones rápidas** - Finalidad casi instantánea (3-5 segundos)
-- 💰 **Comisiones bajas** - Fracciones de centavo por transacción
-- 🌍 **Soporte nativo de USDC** - Donaciones en stablecoin sin complejidad
-- 🚀 **Perfecto para micro-donaciones** - Ideal para crowdfunding
-- 🌎 **Amigable con LATAM** - Excelente infraestructura para América Latina
-- 🔓 **No custodial** - Los usuarios mantienen control total de sus fondos
+#### 🌍 **El Problema en LATAM**
+- **Inflación**: Los fondos pierden valor mientras esperan
+- **Conversión de divisas**: Pérdidas del 5-15% en cambios
+- **Acceso limitado**: Solo 30% de proyectos LATAM califican para plataformas globales
+- **Desconfianza**: Falta de transparencia genera escepticismo en backers
+
+### El Dolor de los Backers
+
+#### 🤔 **Falta de Confianza**
+- No pueden verificar si su dinero llegó al proyecto
+- No saben cómo se usarán los fondos
+- No tienen prueba verificable de sus recompensas
+- Proyectos fantasma que desaparecen con el dinero
+
+#### 💔 **Recompensas No Entregadas**
+- 30% de proyectos de crowdfunding no cumplen con las recompensas prometidas
+- No hay forma de verificar la propiedad de beneficios
+- Imposible revender o transferir recompensas
+
+---
+
+## 🐝 La Solución: Colmena
+
+**Colmena** es una plataforma de crowdfunding basada en recompensas que utiliza **Stellar** para eliminar intermediarios, reducir costos y garantizar transparencia total.
+
+### 🎯 Propuesta de Valor
+
+#### Para Creadores
+- ✅ **Cero comisiones de plataforma** - Solo fees de Stellar (~$0.00001 por transacción)
+- ✅ **Fondos instantáneos** - Recibe donaciones en 3-5 segundos
+- ✅ **Sin restricciones geográficas** - Cualquier persona con wallet puede recibir fondos
+- ✅ **Recompensas digitales verificables** - Emite beneficios como assets de Stellar
+- ✅ **Transparencia automática** - Todas las transacciones son públicas y auditables
+
+#### Para Backers
+- ✅ **Transparencia total** - Ve exactamente a dónde va tu dinero
+- ✅ **Recompensas verificables** - Recibe assets digitales únicos en tu wallet
+- ✅ **Propiedad real** - Tus beneficios son tuyos, verificables on-chain
+- ✅ **Transferibles** - Puedes vender o regalar tus recompensas
+- ✅ **Sin intermediarios** - Tu dinero va directo al proyecto
+
+### 🎁 Innovación: Recompensas como Assets de Stellar
+
+Colmena implementa un sistema de **crowdfunding basado en recompensas** donde cada beneficio es un **asset único de Stellar**:
+
+```
+Donación de $300 XLM → Recibe asset "SOLARSHIRT" (1 de 50)
+                      ↓
+              Verificable on-chain
+              Transferible
+              Auditable
+              Único
+```
+
+#### Tipos de Recompensas
+- 🎨 **Productos físicos**: Camisetas, libros, hardware (verificados con asset)
+- 💻 **Productos digitales**: Software, cursos, contenido exclusivo
+- 🎟️ **Acceso**: Eventos, comunidades privadas, beta testing
+- 🏆 **Reconocimiento**: Badges, menciones, agradecimientos públicos
+- 🎁 **Experiencias**: Reuniones, mentorías, workshops
+
+#### Flujo de Recompensas
+
+1. **Creador define beneficios** con supply limitado (ej: 50 camisetas)
+2. **Backer dona** y selecciona beneficio deseado
+3. **Sistema crea trustline** automáticamente en wallet del backer
+4. **Asset único se emite** y transfiere al backer
+5. **Backer posee** el asset verificable en su wallet
+6. **Creador ve** el asset en wallet del backer para validar entrega
+
+---
+
+## ⭐ Por qué Stellar
+
+Stellar no es solo una blockchain más - es la **infraestructura perfecta** para crowdfunding en LATAM.
+
+### 🚀 Ventajas Técnicas de Stellar
+
+| Característica | Stellar | Ethereum | Bitcoin |
+|----------------|---------|----------|----------|
+| **Velocidad** | 3-5 segundos | 15 segundos - 5 min | 10-60 minutos |
+| **Costo por TX** | $0.00001 | $1-50 | $1-10 |
+| **Throughput** | 1000+ TPS | 15-30 TPS | 7 TPS |
+| **Finalidad** | Inmediata | Probabilística | Probabilística |
+| **Assets nativos** | ✅ Built-in | ❌ Requiere contratos | ❌ No soporta |
+| **USDC nativo** | ✅ Sí | ⚠️ Via contratos | ❌ No |
+
+### 💡 Por Qué Stellar es Ideal para Crowdfunding
+
+#### 1. **Micro-transacciones Viables**
+- Fees de $0.00001 permiten donaciones de cualquier monto
+- Un proyecto puede recibir 10,000 donaciones por menos de $0.10 en fees
+- Comparación: En Ethereum, 10,000 transacciones = $10,000-$500,000 en gas
+
+#### 2. **Assets Nativos (Sin Smart Contracts)**
+- Emitir un asset = 1 operación simple
+- No requiere auditorías de contratos
+- No hay riesgo de bugs en smart contracts
+- Menor superficie de ataque
+
+#### 3. **Perfecto para LATAM**
+- Infraestructura robusta en América Latina
+- Soporte nativo de USDC (protección contra inflación)
+- Onboarding fácil con wallets como Freighter y xBull
+- Sin restricciones geográficas
+
+#### 4. **UX Superior**
+- Confirmaciones en 3-5 segundos (vs 15 min en Bitcoin)
+- Sin esperas frustrantes para backers
+- Experiencia comparable a Web2
+
+#### 5. **Escalabilidad Real**
+- 1000+ transacciones por segundo
+- Sin congestión de red
+- Fees predecibles (no suben en horas pico)
+
+---
+
+## 💰 Por Qué XLM en el MVP (No USDC)
+
+### Decisión Estratégica para el MVP
+
+Aunque Stellar soporta USDC nativamente, **Colmena usa XLM** en su MVP por razones técnicas y de UX:
+
+#### ✅ Ventajas de XLM para MVP
+
+1. **Simplicidad de Onboarding**
+   - Los usuarios solo necesitan XLM para empezar
+   - No requieren crear trustlines adicionales para donar
+   - Reduce fricción en el primer uso
+
+2. **Menor Complejidad Técnica**
+   - XLM es el asset nativo - siempre disponible
+   - No requiere gestión de trustlines para donaciones
+   - Menos pasos = menos puntos de falla
+
+3. **Testing y Desarrollo**
+   - Friendbot de testnet provee XLM gratis
+   - Facilita pruebas sin necesidad de fondear USDC
+   - Desarrollo más ágil
+
+4. **Fees de Red**
+   - XLM se usa para pagar fees de Stellar
+   - Los usuarios ya tienen XLM en su wallet
+   - No necesitan dos assets para operar
+
+5. **Adopción Gradual**
+   - MVP valida el modelo de negocio primero
+   - USDC se agrega cuando hay tracción
+   - Evita complejidad prematura
+
+#### 🔄 Roadmap: USDC en Producción
+
+Una vez validado el MVP, **USDC será el asset principal** para producción:
+
+**Por qué USDC después del MVP:**
+- ✅ Protección contra volatilidad de XLM
+- ✅ Más familiar para usuarios no-crypto
+- ✅ Mejor para proyectos que necesitan estabilidad
+- ✅ Facilita conversión a fiat
+
+**Implementación:**
+```typescript
+// MVP: Solo XLM
+const supportedAssets = ['XLM'];
+
+// Post-MVP: XLM + USDC
+const supportedAssets = ['XLM', 'USDC'];
+// Usuario elige en UI
+```
+
+### 📊 Comparación: XLM vs USDC
+
+| Aspecto | XLM (MVP) | USDC (Post-MVP) |
+|---------|-----------|------------------|
+| **Onboarding** | ✅ Simple | ⚠️ Requiere trustline |
+| **Volatilidad** | ⚠️ 5-10% diario | ✅ Estable ($1) |
+| **Fees** | ✅ Pagados en XLM | ✅ Pagados en XLM |
+| **Testnet** | ✅ Friendbot gratis | ⚠️ Requiere fondeo manual |
+| **Familiaridad** | ⚠️ Crypto nativo | ✅ Equivalente a USD |
+| **Conversión fiat** | ⚠️ Exchanges | ✅ Directo a USD |
 
 ---
 
@@ -557,22 +741,273 @@ git push origin feature/nombre-de-tu-feature
 
 ---
 
-## 🎯 Roadmap
+## 🎯 Roadmap y Escalabilidad
 
-### MVP (Actual)
-- ✅ Autenticación de usuarios
-- ✅ Creación y gestión de proyectos
-- ✅ Integración con wallet de Stellar
-- ✅ Donaciones en XLM y USDC
-- ✅ Registro de transacciones
+### 🏗️ MVP (Actual - Ideathon 2026)
 
-### Características Futuras
-- 🔄 On-ramp fiat (Stripe/Flow)
-- 🔄 Smart contracts Soroban
-- 🔄 Financiamiento basado en hitos
-- 🔄 Sistema de reputación de proyectos
-- 🔄 Soporte multi-idioma
-- 🔄 Aplicación móvil
+**Objetivo**: Validar el modelo de crowdfunding con recompensas digitales
+
+#### ✅ Completado
+- **Autenticación híbrida** - Google OAuth + Stellar wallets
+- **Gestión de proyectos** - CRUD completo con media y roadmap
+- **Donaciones en XLM** - Transacciones peer-to-peer verificadas
+- **Recompensas digitales** - Assets de Stellar como beneficios
+- **Trustlines automáticas** - Creación sin fricción para backers
+- **Transparencia total** - Todas las transacciones on-chain
+
+#### 📊 Métricas de Éxito del MVP
+- [ ] 10+ proyectos creados
+- [ ] 100+ donaciones procesadas
+- [ ] 50+ beneficios digitales emitidos
+- [ ] 0 custodia de fondos (100% peer-to-peer)
+- [ ] <$0.01 en fees totales por proyecto
+
+---
+
+### 🚀 Fase 1: Producción (Q1 2026)
+
+**Objetivo**: Lanzamiento público con USDC y on-ramp fiat
+
+#### 💵 Soporte Multi-Asset
+```typescript
+// Donaciones en múltiples assets
+const supportedAssets = ['XLM', 'USDC', 'EURC'];
+
+// Conversión automática para proyectos
+if (project.preferredAsset === 'USDC') {
+  // Auto-swap XLM → USDC via Stellar DEX
+}
+```
+
+#### 🏦 On-Ramp Fiat
+- **Stripe Integration** - Compra XLM/USDC con tarjeta
+- **Flow (LATAM)** - Pagos locales en pesos, reales, etc.
+- **MercadoPago** - Integración para Argentina, Brasil, México
+
+**Flujo**:
+```
+Usuario paga $50 USD con tarjeta
+       ↓
+Stripe procesa pago
+       ↓
+Auto-compra 50 USDC en Stellar
+       ↓
+Donación automática al proyecto
+```
+
+#### 🌍 Expansión Geográfica
+- Soporte multi-idioma (ES, EN, PT)
+- Localización de monedas
+- Partnerships con comunidades LATAM
+
+**Métricas**:
+- [ ] 100+ proyectos activos
+- [ ] $50,000+ en donaciones totales
+- [ ] 1,000+ backers únicos
+- [ ] 50% de donaciones vía fiat on-ramp
+
+---
+
+### 🔥 Fase 2: Smart Contracts (Q2 2026)
+
+**Objetivo**: Funcionalidades avanzadas con Soroban
+
+#### 🎯 Milestones Financiables
+```rust
+// Smart contract Soroban
+contract MilestoneEscrow {
+    // Fondos bloqueados hasta cumplir milestone
+    fn release_funds(milestone_id: u32) {
+        require(milestone_completed(milestone_id));
+        transfer_to_project(locked_funds);
+    }
+}
+```
+
+**Casos de uso**:
+- Proyecto define 3 milestones: Prototipo, Beta, Lanzamiento
+- Fondos se liberan al cumplir cada milestone
+- Backers votan si milestone se cumplió
+- Reembolso automático si proyecto no avanza
+
+#### 💎 NFTs de Reconocimiento
+```rust
+// Badges automáticos para top donors
+contract DonorBadges {
+    fn mint_badge(donor: Address, tier: BadgeTier) {
+        // Bronce: $100+, Plata: $500+, Oro: $1000+
+        mint_nft(donor, tier);
+    }
+}
+```
+
+#### 🗳️ Gobernanza Descentralizada
+- Backers votan uso de fondos
+- Propuestas on-chain
+- Ejecución automática de decisiones
+
+**Métricas**:
+- [ ] 50+ proyectos con milestones
+- [ ] $100,000+ en escrow activo
+- [ ] 500+ NFTs de reconocimiento emitidos
+- [ ] 10+ decisiones de gobernanza ejecutadas
+
+---
+
+### 🌟 Fase 3: Ecosistema (Q3-Q4 2026)
+
+**Objetivo**: Plataforma completa con marketplace y DeFi
+
+#### 🛒 Marketplace de Recompensas
+```typescript
+// Backers pueden revender sus beneficios
+const marketplace = {
+  listBenefit: (assetCode, price) => {
+    // Lista asset en DEX de Stellar
+    createSellOffer(assetCode, price);
+  },
+  buyBenefit: (assetCode) => {
+    // Compra asset de otro backer
+    acceptOffer(assetCode);
+  }
+};
+```
+
+**Casos de uso**:
+- Backer no puede asistir a evento → revende ticket
+- Beneficio físico no deseado → lo vende
+- Especulación en beneficios limitados
+
+#### � Staking de XLM para Proyectos
+```rust
+// Proyectos hacen staking para ganar visibilidad
+contract ProjectStaking {
+    fn stake_for_visibility(amount: i128) {
+        // Más stake = más visibilidad en feed
+        increase_ranking(project_id, amount);
+    }
+}
+```
+
+#### 🏆 Sistema de Reputación
+- **Para proyectos**: Basado en cumplimiento de promesas
+- **Para backers**: Basado en participación y contribuciones
+- **Verificación on-chain**: Reputación inmutable
+
+#### � App Móvil Nativa
+- iOS y Android
+- Wallet integrada
+- Notificaciones push para updates de proyectos
+- Escaneo QR para donaciones físicas
+
+**Métricas**:
+- [ ] 500+ proyectos activos
+- [ ] $500,000+ en volumen mensual
+- [ ] 10,000+ usuarios activos mensuales
+- [ ] 1,000+ transacciones diarias en marketplace
+- [ ] 50,000+ descargas de app móvil
+
+---
+
+### 🚀 Fase 4: Expansión Global (2027+)
+
+**Objetivo**: Plataforma líder de crowdfunding descentralizado
+
+#### 🌐 Multi-Chain
+- Bridge a otras blockchains (Ethereum, Polygon)
+- Donaciones cross-chain
+- Liquidez agregada
+
+#### 🏢 Colmena for Business
+- Herramientas para empresas
+- API para integraciones
+- White-label solutions
+
+#### 🎓 Colmena Education
+- Cursos sobre crowdfunding
+- Certificaciones para creadores
+- Comunidad de mentores
+
+#### � Venture Capital Descentralizado
+- Equity crowdfunding tokenizado
+- Inversiones en startups vía Stellar
+- Secondary market para equity tokens
+
+**Visión a 5 años**:
+- 🎯 10,000+ proyectos financiados
+- 💰 $10M+ en volumen total
+- 🌍 Presencia en 50+ países
+- 👥 100,000+ usuarios activos
+- 🏆 Plataforma #1 de crowdfunding en LATAM
+
+---
+
+### 🔧 Escalabilidad Técnica
+
+#### Infraestructura
+```
+Actual (MVP):
+- Next.js en Vercel
+- Supabase (PostgreSQL)
+- Stellar Testnet
+
+Futuro (Producción):
+- Next.js + CDN global
+- PostgreSQL replicado (multi-región)
+- Stellar Mainnet + Horizon redundante
+- Redis para caching
+- Queue system (Bull/BullMQ)
+```
+
+#### Capacidad
+| Métrica | MVP | Fase 1 | Fase 2 | Fase 3 |
+|---------|-----|--------|--------|--------|
+| **Proyectos** | 100 | 1,000 | 10,000 | 100,000 |
+| **Usuarios** | 500 | 5,000 | 50,000 | 500,000 |
+| **TX/día** | 100 | 1,000 | 10,000 | 100,000 |
+| **Costo/mes** | $50 | $500 | $2,000 | $10,000 |
+
+#### Optimizaciones Planeadas
+- **Indexer custom** - Para queries rápidas de blockchain
+- **GraphQL API** - Para clientes móviles eficientes
+- **WebSockets** - Updates en tiempo real
+- **IPFS** - Storage descentralizado de media
+- **Arweave** - Archivo permanente de proyectos
+
+---
+
+### 💡 Modelo de Negocio
+
+#### MVP (Sin Monetización)
+- Enfoque en validación y tracción
+- Cero comisiones para atraer early adopters
+- Solo fees de Stellar (~$0.00001/tx)
+
+#### Post-MVP (Sostenibilidad)
+
+**Opción 1: Comisión Opcional**
+```typescript
+// Creadores eligen % de comisión voluntaria
+const platformFee = project.voluntaryFee || 0; // 0-5%
+```
+
+**Opción 2: Freemium**
+- **Free**: Proyectos básicos
+- **Pro ($49/mes)**: Analytics avanzados, prioridad en feed
+- **Enterprise ($299/mes)**: White-label, API access
+
+**Opción 3: Servicios Premium**
+- Generación de portadas con IA: $5/imagen
+- Consultoría de campaña: $100/hora
+- Marketing en plataforma: $50-500/campaña
+
+**Proyección de Ingresos**:
+```
+Año 1: $0 (MVP)
+Año 2: $50K (100 proyectos Pro)
+Año 3: $500K (1000 proyectos Pro + servicios)
+Año 4: $2M (escala + enterprise)
+```
 
 ---
 

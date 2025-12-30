@@ -19,10 +19,10 @@ const createDonationSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  console.log("🚀 [API] Donation request received");
+  
   try {
     const body = await request.json();
-    console.log("📦 [API] Request body:", body);
+    
     const validated = createDonationSchema.parse(body);
 
     const donation = await createDonation({
@@ -34,14 +34,11 @@ export async function POST(request: NextRequest) {
       network: validated.network,
     });
 
-    console.log(" [API] Donation created successfully:", donation);
+    
     return NextResponse.json({ donation }, { status: 201 });
   } catch (error) {
-    console.error(" [API] Donation creation failed:", error);
-    console.error(
-      " [API] Error details:",
-      error instanceof Error ? error.message : error,
-    );
+    
+    
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Validation error", details: error.issues },

@@ -1,6 +1,7 @@
 import * as StellarSdk from '@stellar/stellar-sdk';
 import crypto from 'crypto';
 import { supabaseServer } from '@/lib/supabase/server';
+import type { Database } from '@/lib/supabase/types';
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY!;
 const STELLAR_NETWORK = process.env.NEXT_PUBLIC_STELLAR_NETWORK || 'testnet';
@@ -56,8 +57,8 @@ export async function createIssuerAccount(projectId: string): Promise<{
     const issuerKeypair = StellarSdk.Keypair.random();
     const encryptedSecret = encrypt(issuerKeypair.secret());
     
-    const { data, error } = await supabase
-      .from('project_issuer_accounts')
+    const { data, error } = await (supabase
+      .from('project_issuer_accounts') as any)
       .insert({
         project_id: projectId,
         public_key: issuerKeypair.publicKey(),
@@ -70,18 +71,32 @@ export async function createIssuerAccount(projectId: string): Promise<{
       .single();
     
     if (error) {
-      console.error('Error creating issuer account:', error);
+      
       return { publicKey: '', error: error.message };
     }
     
-    await supabase
-      .from('projects')
+    await (supabase
+      .from('projects') as any)
       .update({ issuer_account: issuerKeypair.publicKey() })
       .eq('id', projectId);
     
+    // Fund the account automatically in testnet
+    
+    const fundResult = await fundIssuerAccount(projectId);
+    
+    if (!fundResult.success) {
+      
+      return { 
+        publicKey: issuerKeypair.publicKey(), 
+        error: `Account created but funding failed: ${fundResult.error}` 
+      };
+    }
+    
+    
+    
     return { publicKey: issuerKeypair.publicKey() };
   } catch (error) {
-    console.error('Error in createIssuerAccount:', error);
+    
     return { 
       publicKey: '', 
       error: error instanceof Error ? error.message : 'Unknown error' 
@@ -97,8 +112,8 @@ export async function fundIssuerAccount(projectId: string): Promise<{
   try {
     const supabase = supabaseServer;
     
-    const { data: issuerData, error: fetchError } = await supabase
-      .from('project_issuer_accounts')
+    const { data: issuerData, error: fetchError } = await (supabase
+      .from('project_issuer_accounts') as any)
       .select('*')
       .eq('project_id', projectId)
       .single();
@@ -120,8 +135,8 @@ export async function fundIssuerAccount(projectId: string): Promise<{
     if (STELLAR_NETWORK === 'testnet') {
       await server.friendbot(issuerData.public_key).call();
       
-      await supabase
-        .from('project_issuer_accounts')
+      await (supabase
+        .from('project_issuer_accounts') as any)
         .update({ is_funded: true, last_used_at: new Date().toISOString() })
         .eq('id', issuerData.id);
       
@@ -133,7 +148,7 @@ export async function fundIssuerAccount(projectId: string): Promise<{
       };
     }
   } catch (error) {
-    console.error('Error funding issuer account:', error);
+    
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
@@ -148,8 +163,8 @@ export async function getIssuerKeypair(projectId: string): Promise<{
   try {
     const supabase = supabaseServer;
     
-    const { data, error } = await supabase
-      .from('project_issuer_accounts')
+    const { data, error } = await (supabase
+      .from('project_issuer_accounts') as any)
       .select('*')
       .eq('project_id', projectId)
       .single();
@@ -163,7 +178,7 @@ export async function getIssuerKeypair(projectId: string): Promise<{
     
     return { keypair };
   } catch (error) {
-    console.error('Error getting issuer keypair:', error);
+    
     return { 
       error: error instanceof Error ? error.message : 'Unknown error' 
     };
@@ -189,7 +204,7 @@ export async function getIssuerAccount(projectId: string): Promise<{
     
     return { account: data as IssuerAccount };
   } catch (error) {
-    console.error('Error getting issuer account:', error);
+    
     return { 
       error: error instanceof Error ? error.message : 'Unknown error' 
     };

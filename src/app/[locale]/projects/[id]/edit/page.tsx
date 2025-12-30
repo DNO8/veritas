@@ -80,7 +80,7 @@ export default function EditProjectPage() {
           setGalleryImages(mediaData.media || []);
         }
       } catch (error) {
-        console.error("Error fetching project:", error);
+        
         router.push(`/${locale}/projects`);
       } finally {
         setLoading(false);
@@ -198,7 +198,7 @@ export default function EditProjectPage() {
         setMessage({ type: "error", text: error.error || "Error al actualizar" });
       }
     } catch (error) {
-      console.error("Error updating project:", error);
+      
       setMessage({ type: "error", text: "Error al actualizar el proyecto" });
     } finally {
       setSaving(false);

@@ -41,7 +41,7 @@ export default function MyProjectsPage() {
         .order("created_at", { ascending: false });
 
       if (fetchError) {
-        console.error("Error fetching projects:", fetchError);
+        
       } else {
         setProjects((data as Project[]) || []);
       }

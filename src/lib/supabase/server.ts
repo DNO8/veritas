@@ -18,3 +18,5 @@ export const supabaseServer = createClient<Database>(
     },
   },
 );
+
+export type SupabaseClient = typeof supabaseServer;

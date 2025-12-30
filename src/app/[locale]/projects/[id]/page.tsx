@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Lightbox from "yet-another-react-lightbox";
@@ -14,6 +14,10 @@ import TopDonors from "@/components/project/TopDonors";
 import LoadingBee from "@/components/LoadingBee";
 import { useNotification } from "@/components/NotificationToast";
 import { useTranslations } from "next-intl";
+import BenefitSelector from "@/components/project/BenefitSelector";
+import BenefitReceivedModal from "@/components/project/BenefitReceivedModal";
+import { buildMultipleTrustlinesTransaction, hasTrustline } from "@/lib/stellar/trustline";
+import * as StellarSdk from '@stellar/stellar-sdk';
 
 export default function ProjectPage() {
   const params = useParams();
@@ -26,6 +30,14 @@ export default function ProjectPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [publishing, setPublishing] = useState(false);
+  const [benefits, setBenefits] = useState<any[]>([]);
+  const [loadingBenefits, setLoadingBenefits] = useState(true);
+  const [userHoldings, setUserHoldings] = useState<Set<string>>(new Set());
+  const [showBenefitSelector, setShowBenefitSelector] = useState(false);
+  const [selectedBenefitIds, setSelectedBenefitIds] = useState<string[]>([]);
+  const [showBenefitReceived, setShowBenefitReceived] = useState(false);
+  const [receivedBenefits, setReceivedBenefits] = useState<any[]>([]);
+  const [donationTxHash, setDonationTxHash] = useState("");
   const { showNotification, NotificationContainer } = useNotification();
 
   const { isConnected, publicKey, signTransaction } = useWallet();
@@ -39,6 +51,49 @@ export default function ProjectPage() {
     loading,
     error,
   } = useProject(String(params.id));
+
+  // Load benefits
+  useEffect(() => {
+    const loadBenefits = async () => {
+      if (!params.id) return;
+      
+      try {
+        const response = await fetch(`/api/benefits?projectId=${params.id}`);
+        const data = await response.json();
+        
+        if (data.benefits) {
+          setBenefits(data.benefits.filter((b: any) => b.is_active));
+        }
+      } catch (error) {
+        
+      } finally {
+        setLoadingBenefits(false);
+      }
+    };
+
+    loadBenefits();
+  }, [params.id]);
+
+  // Load user holdings
+  useEffect(() => {
+    const loadUserHoldings = async () => {
+      if (!publicKey || !params.id) return;
+
+      try {
+        const response = await fetch(`/api/user/benefits?wallet=${publicKey}&projectId=${params.id}`);
+        const data = await response.json();
+
+        if (data.holdings) {
+          const benefitIds = new Set<string>(data.holdings.map((h: any) => h.benefit_id as string));
+          setUserHoldings(benefitIds);
+        }
+      } catch (error) {
+        
+      }
+    };
+
+    loadUserHoldings();
+  }, [publicKey, params.id]);
 
   const handlePublish = async () => {
     if (!project) return;
@@ -74,7 +129,7 @@ export default function ProjectPage() {
     }
   };
 
-  const handleDonate = async () => {
+  const handleDonateClick = () => {
     if (!amount || Number(amount) <= 0) {
       showNotification("Por favor ingresa un monto válido", "warning");
       return;
@@ -93,17 +148,128 @@ export default function ProjectPage() {
       return;
     }
 
+    // Show benefit selector first
+    setShowBenefitSelector(true);
+  };
+
+  const handleBenefitsSelected = (benefitIds: string[]) => {
+    setSelectedBenefitIds(benefitIds);
+    setShowBenefitSelector(false);
+    // Proceed with donation
+    processDonation(benefitIds);
+  };
+
+  const processDonation = async (benefitIds: string[]) => {
+    if (!project || !publicKey) return;
+    
     setDonating(true);
 
     try {
+      const networkEnv = process.env.NEXT_PUBLIC_STELLAR_NETWORK || "testnet";
+      const stellarNetwork = networkEnv.toUpperCase() as "TESTNET" | "MAINNET";
+      const networkPassphrase = networkEnv === "testnet" 
+        ? StellarSdk.Networks.TESTNET 
+        : StellarSdk.Networks.PUBLIC;
+
+      // Step 1: Check and create trustlines for selected benefits
+      if (benefitIds.length > 0) {
+        const trustlinesToCreate: Array<{ assetCode: string; issuerPublicKey: string }> = [];
+        
+        // Get issuer account for the project
+        const issuerResponse = await fetch(`/api/projects/${project.id}/issuer`);
+        if (!issuerResponse.ok) {
+          throw new Error("Failed to get issuer account");
+        }
+        const { issuerPublicKey } = await issuerResponse.json();
+        
+        // Check which trustlines are needed
+        for (const benefitId of benefitIds) {
+          const benefit = benefits.find(b => b.id === benefitId);
+          if (!benefit) continue;
+
+          const hasTrust = await hasTrustline(publicKey, benefit.asset_code, issuerPublicKey);
+          
+          if (!hasTrust) {
+            trustlinesToCreate.push({
+              assetCode: benefit.asset_code,
+              issuerPublicKey: issuerPublicKey,
+            });
+          }
+        }
+
+        // Create trustlines if needed
+        if (trustlinesToCreate.length > 0) {
+          showNotification(
+            `Necesitas autorizar ${trustlinesToCreate.length} trustline${trustlinesToCreate.length > 1 ? 's' : ''} para recibir beneficios. Por favor firma la transacción en tu wallet.`,
+            "info"
+          );
+
+          try {
+            const trustlineTx = await buildMultipleTrustlinesTransaction(
+              publicKey,
+              trustlinesToCreate
+            );
+
+            const trustlineXdr = trustlineTx.toXDR();
+            
+            const signedTrustlineXdr = await signTransaction(trustlineXdr, networkPassphrase);
+
+            if (!signedTrustlineXdr) {
+              throw new Error("Trustline transaction was cancelled or not signed");
+            }
+
+            // Submit signed transaction to Stellar
+            const StellarSdk = await import('@stellar/stellar-sdk');
+            const server = new StellarSdk.Horizon.Server(
+              networkEnv === "testnet"
+                ? 'https://horizon-testnet.stellar.org'
+                : 'https://horizon.stellar.org'
+            );
+            
+            const signedTx = StellarSdk.TransactionBuilder.fromXDR(
+              signedTrustlineXdr,
+              networkPassphrase
+            );
+            
+            const result = await server.submitTransaction(signedTx);
+            showNotification("Trustlines autorizadas exitosamente. Esperando confirmación en la red...", "success");
+            
+            // Wait for trustline to be confirmed on Stellar network
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            
+            // Verify trustline was created
+            let trustlineConfirmed = false;
+            for (let i = 0; i < 3; i++) {
+              const hasTrust = await hasTrustline(publicKey, trustlinesToCreate[0].assetCode, trustlinesToCreate[0].issuerPublicKey);
+              if (hasTrust) {
+                trustlineConfirmed = true;
+                break;
+              }
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+            
+            if (!trustlineConfirmed) {
+              // Trustline not confirmed yet, but proceeding anyway
+            }
+            
+            showNotification("Trustline confirmada. Ahora procederemos con la donación.", "success");
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          } catch (trustlineError) {
+            
+            throw new Error(`No se pudieron crear las trustlines: ${trustlineError instanceof Error ? trustlineError.message : 'Error desconocido'}`);
+          }
+        }
+      }
+
+      // Step 2: Process donation payment
       const result = await sendPayment(
         {
           sourcePublicKey: publicKey,
-          destinationPublicKey: project.wallet_address,
+          destinationPublicKey: project.wallet_address!,
           amount: amount,
           asset: asset,
           memo: `Donate:${project.id.substring(0, 8)}`,
-          network: "TESTNET",
+          network: stellarNetwork,
         },
         signTransaction,
       );
@@ -112,25 +278,48 @@ export default function ProjectPage() {
         throw new Error("Transaction failed on Stellar network");
       }
 
-      await fetch("/api/donations", {
+      const response = await fetch("/api/donations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           projectId: project.id,
           donorWallet: publicKey,
-          amount: amount,
-          asset: asset,
+          amount,
+          asset,
           txHash: result.hash,
-          network: "TESTNET",
+          network: stellarNetwork,
+          selectedBenefitIds: benefitIds,
         }),
       });
 
-      showNotification(
-        `¡Donación exitosa! ${amount} ${asset} - Tx: ${result.hash.substring(0, 8)}...${result.hash.substring(result.hash.length - 8)}`,
-        "success",
-      );
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to record donation");
+      }
 
-      window.location.reload();
+      const data = await response.json();
+      const benefitsIssued = data.donation?.benefitsIssued || 0;
+
+      // If benefits were issued, show the modal
+      if (benefitsIssued > 0 && benefitIds.length > 0) {
+        const issuedBenefits = benefits.filter(b => benefitIds.includes(b.id));
+        setReceivedBenefits(issuedBenefits);
+        setDonationTxHash(result.hash);
+        setShowBenefitReceived(true);
+      } else {
+        showNotification(
+          `¡Donación exitosa! ${amount} ${asset}`,
+          "success",
+        );
+        
+        // Reload after a short delay
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
+
+      setAmount("");
+      setDonating(false);
     } catch (error) {
       showNotification(
         `Error en la donación: ${error instanceof Error ? error.message : "Error desconocido"}`,
@@ -161,12 +350,41 @@ export default function ProjectPage() {
     const cost = parseFloat(item.estimated_cost || "0");
     return sum + cost;
   }, 0);
-  const currentAmount = parseFloat(project.current_amount || "0");
+  const currentAmount = parseFloat(String(project.current_amount || "0"));
   const percentage = totalNeeded > 0 ? (currentAmount / totalNeeded) * 100 : 0;
 
   return (
     <>
       {NotificationContainer}
+      
+      {/* Benefit Selector Modal */}
+      <AnimatePresence>
+        {showBenefitSelector && project && (
+          <BenefitSelector
+            projectId={project.id}
+            donationAmount={parseFloat(amount)}
+            donationAsset={asset}
+            onSelect={handleBenefitsSelected}
+            onCancel={() => setShowBenefitSelector(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Benefit Received Modal */}
+      {showBenefitReceived && (
+        <BenefitReceivedModal
+          benefits={receivedBenefits}
+          txHash={donationTxHash}
+          onClose={() => {
+            setShowBenefitReceived(false);
+            showNotification("¡Beneficios recibidos exitosamente!", "success");
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          }}
+        />
+      )}
+
       <div className="min-h-screen hex-pattern">
         {/* Hero Cover */}
         <div className="relative">
@@ -244,6 +462,14 @@ export default function ProjectPage() {
                     className="btn-brutal btn-brutal-secondary"
                   >
                     📋 {t("manageRoadmap")}
+                  </button>
+                  <button
+                    onClick={() =>
+                      router.push(`/projects/${project.id}/benefits`)
+                    }
+                    className="btn-brutal bg-[#FDCB6E] border-4 border-black font-bold shadow-brutal hover:bg-[#E67E22]"
+                  >
+                    🎁 Gestionar Beneficios
                   </button>
                 </motion.div>
               )}
@@ -452,6 +678,91 @@ export default function ProjectPage() {
                 </motion.div>
               )}
 
+              {/* Benefits */}
+              {benefits.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 }}
+                  className="card-brutal p-6 bg-white"
+                >
+                  <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2">
+                    <span>🎁</span> Beneficios Digitales
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {benefits.map((benefit: any, index: number) => (
+                      <motion.div
+                        key={benefit.id}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="border-4 border-black bg-white shadow-brutal overflow-hidden"
+                      >
+                        {/* Imagen Circular POAP */}
+                        {benefit.image_url && (
+                          <div className="relative flex items-center justify-center p-6 bg-gray-50">
+                            <div 
+                              className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-black overflow-hidden bg-white"
+                              style={{ boxShadow: '6px 6px 0px #000000' }}
+                            >
+                              <img
+                                src={benefit.image_url}
+                                alt={benefit.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            {/* Badge de "Ya lo tienes" */}
+                            {userHoldings.has(benefit.id) && (
+                              <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 border-2 border-black font-bold text-xs">
+                                ✓ LO TIENES
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Contenido */}
+                        <div className="p-4">
+                          <h3 className="font-bold text-base sm:text-lg mb-2">
+                            {benefit.title}
+                          </h3>
+                          <p className="text-xs sm:text-sm text-gray-700 mb-3 line-clamp-2">
+                            {benefit.description}
+                          </p>
+
+                          {/* Stats */}
+                          <div className="grid grid-cols-2 gap-2 mb-3">
+                            <div className="bg-[#FDCB6E] border-2 border-black p-2">
+                              <p className="text-xs font-mono text-gray-700">Min. Donación</p>
+                              <p className="font-bold font-mono text-sm">{benefit.minimum_donation} {benefit.donation_currency || 'USDC'}</p>
+                            </div>
+                            <div className="bg-[#E67E22] border-2 border-black p-2 text-white">
+                              <p className="text-xs font-mono">Disponibles</p>
+                              <p className="font-bold font-mono text-sm">{benefit.total_supply - benefit.issued_supply}</p>
+                            </div>
+                          </div>
+
+                          {/* Supply Progress */}
+                          <div className="mb-2">
+                            <div className="flex justify-between text-xs font-mono mb-1">
+                              <span>Emitidos</span>
+                              <span>{benefit.issued_supply} / {benefit.total_supply}</span>
+                            </div>
+                            <div className="w-full h-2 border-2 border-black bg-white">
+                              <div
+                                className="h-full bg-[#FDCB6E] transition-all"
+                                style={{
+                                  width: `${(benefit.issued_supply / benefit.total_supply) * 100}%`,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
               {/* Gallery */}
               {galleryImages.length > 0 && (
                 <motion.div
@@ -581,7 +892,7 @@ export default function ProjectPage() {
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={handleDonate}
+                      onClick={handleDonateClick}
                       disabled={!isConnected || donating || !amount}
                       className={`w-full btn-brutal ${
                         !isConnected || donating || !amount

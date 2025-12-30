@@ -5,6 +5,8 @@ import type { StellarNetwork } from "../stellar/config";
 import { isValidStellarAddress, isValidTxHash } from "../stellar/validation";
 import { incrementProjectAmount, getProjectById } from "./projects";
 import { getUserById } from "./users";
+import { getEligibleBenefits, issueAssetToRecipient } from "./assetIssuance";
+import { getIssuerKeypair } from "./issuerAccounts";
 
 export async function getDonationsByProjectId(
   projectId: string,
@@ -56,6 +58,7 @@ export interface CreateDonationInput {
   asset: string;
   txHash: string;
   network: StellarNetwork;
+  selectedBenefitIds?: string[];
 }
 
 export async function createDonation(
@@ -107,13 +110,7 @@ export async function createDonation(
   const stellarClient =
     input.network === "TESTNET" ? stellarTestnet : stellarMainnet;
 
-  console.log("🔍 [DONATION] Verifying payment:", {
-    txHash: input.txHash,
-    destinationWallet,
-    expectedAmount: input.amount,
-    expectedAsset: input.asset,
-    network: input.network,
-  });
+  
 
   const verification = await stellarClient.verifyPayment(
     input.txHash,
@@ -122,17 +119,14 @@ export async function createDonation(
     input.asset,
   );
 
-  console.log("📋 [DONATION] Verification result:", verification);
+  
 
   if (!verification.valid) {
-    console.error(
-      "❌ [DONATION] Payment verification failed:",
-      verification.error,
-    );
+    
     throw new Error(`Payment verification failed: ${verification.error}`);
   }
 
-  console.log("✅ [DONATION] Payment verified, inserting into database...");
+  
 
   const { data, error } = await supabaseServer
     .from("donations")
@@ -142,7 +136,7 @@ export async function createDonation(
       amount: input.amount,
       asset: input.asset,
       tx_hash: input.txHash,
-      network: input.network,
+      network: input.network.toLowerCase(), // Convert to lowercase for DB enum
     } as any)
     .select()
     .single();
@@ -151,12 +145,93 @@ export async function createDonation(
     throw new Error(`Failed to create donation: ${error.message}`);
   }
 
-  console.log("📊 [DONATION] Incrementing project amount...");
-  await incrementProjectAmount(input.projectId, input.amount);
-  console.log("✅ [DONATION] Project amount incremented successfully");
+  if (!data) {
+    throw new Error("Failed to create donation: No data returned");
+  }
 
-  console.log("🎉 [DONATION] Complete donation flow finished successfully");
-  return data;
+  const donation = data as Donation;
+
+  
+  await incrementProjectAmount(input.projectId, input.amount);
+  
+
+  // Check for selected benefits and issue them
+  
+  
+  let benefitsIssuedCount = 0;
+  
+  try {
+    let benefitsToIssue: any[] = [];
+
+    if (input.selectedBenefitIds && input.selectedBenefitIds.length > 0) {
+      // User selected specific benefits - fetch them
+      
+      
+      for (const benefitId of input.selectedBenefitIds) {
+        const { data: benefit, error } = await (supabaseServer
+          .from('project_benefits') as any)
+          .select('*')
+          .eq('id', benefitId)
+          .single();
+
+        if (benefit && !error) {
+          benefitsToIssue.push(benefit);
+          
+        } else {
+          
+        }
+      }
+    } else {
+      // No benefits selected - use automatic eligibility (backward compatibility)
+      
+      benefitsToIssue = await getEligibleBenefits(
+        input.projectId,
+        input.amount,
+        input.asset
+      );
+    }
+
+    
+
+    if (benefitsToIssue.length > 0) {
+      for (const benefit of benefitsToIssue) {
+        const issueResult = await issueAssetToRecipient({
+          projectId: input.projectId,
+          benefitId: benefit.id,
+          recipientPublicKey: input.donorWallet,
+          assetCode: benefit.asset_code,
+          amount: '1', // Issue 1 unit of the benefit NFT
+          donationId: donation.id,
+        });
+
+        if (issueResult.success) {
+          
+          
+          benefitsIssuedCount++;
+        } else {
+          
+          
+          // Continue with other benefits even if one fails
+        }
+      }
+    } else {
+      
+    }
+  } catch (benefitError) {
+    
+    
+    // Don't fail the donation if benefit issuance fails
+    // The donation is already recorded
+  }
+
+  
+  
+  
+  // Return donation with benefits info
+  return {
+    ...donation,
+    benefitsIssued: benefitsIssuedCount
+  } as any;
 }
 
 export async function getTotalDonationsForProject(

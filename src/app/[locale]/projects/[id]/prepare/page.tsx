@@ -66,7 +66,7 @@ export default function PreparePublishPage() {
         
         buildChecklist(data.project, roadmapItemsCount);
       } catch (error) {
-        console.error("Error fetching project:", error);
+        
         router.push(`/${locale}/projects`);
       } finally {
         setLoading(false);
@@ -165,6 +165,7 @@ export default function PreparePublishPage() {
       });
 
       if (res.ok) {
+        router.refresh();
         router.push(`/${locale}/projects/${params.id}`);
       } else {
         const error = await res.json();

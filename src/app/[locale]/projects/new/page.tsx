@@ -210,6 +210,7 @@ export default function NewProjectPage() {
       if (res.ok) {
         const data = await res.json();
         showNotification("¡Proyecto creado exitosamente!", "success");
+        router.refresh();
         router.push(`/${locale}/projects/${data.project.id}/prepare`);
       } else {
         const error = await res.json();

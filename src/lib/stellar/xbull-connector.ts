@@ -61,7 +61,7 @@ export async function isXBullAvailable(): Promise<boolean> {
 
     return !!xBullWallet;
   } catch (error) {
-    console.warn("Error detecting xBull wallet:", error);
+    
     return false;
   }
 }
@@ -120,7 +120,7 @@ export async function connectXBull(): Promise<WalletConnection> {
         throw error;
       }
     }
-    console.error("xBull connection error:", error);
+    
     throw new Error(
       "Failed to connect to xBull. Make sure the extension is installed and enabled.",
     );
@@ -135,6 +135,8 @@ export async function signXBullTransaction(
   opts?: { network?: string; networkPassphrase?: string },
 ): Promise<string> {
   try {
+    
+
     const kit = getWalletKit();
 
     const { signedTxXdr } = await kit.signTransaction(xdr, {
@@ -142,14 +144,21 @@ export async function signXBullTransaction(
     });
 
     if (!signedTxXdr) {
-      throw new Error("Failed to sign transaction");
+      
+      throw new Error("Failed to sign transaction - no signed XDR returned");
     }
 
+    
     return signedTxXdr;
   } catch (error) {
-    if (error instanceof Error && error.message.includes("User closed modal")) {
-      throw new Error("Transaction signing canceled by user");
+    
+    
+    if (error instanceof Error) {
+      if (error.message.includes("User closed modal") || error.message.includes("rejected")) {
+        throw new Error("Transaction signing canceled by user");
+      }
     }
+    
     throw error;
   }
 }

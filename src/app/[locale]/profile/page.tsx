@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase/client";
 import Logo from "@/components/Logo";
 import LoadingBee from "@/components/LoadingBee";
+import UserBenefits from "@/components/user/UserBenefits";
 
 interface UserProfile {
   id: string;
@@ -107,7 +108,7 @@ export default function ProfilePage() {
           }
         }
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        
       } finally {
         setLoading(false);
       }
@@ -426,6 +427,21 @@ export default function ProfilePage() {
             )}
           </motion.div>
         </div>
+
+        {/* Digital Benefits Section */}
+        {user?.wallet_address && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="mt-8"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">🎁 MIS BENEFICIOS DIGITALES</h2>
+            </div>
+            <UserBenefits walletAddress={user.wallet_address} />
+          </motion.div>
+        )}
       </div>
 
       {/* Footer */}

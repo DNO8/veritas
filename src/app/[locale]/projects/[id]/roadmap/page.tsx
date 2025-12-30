@@ -71,7 +71,7 @@ export default function ManageRoadmapPage() {
           setItems(roadmapData.items || []);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        
         showNotification("Error al cargar el roadmap", "error");
         router.push("/projects");
       } finally {
@@ -124,13 +124,14 @@ export default function ManageRoadmapPage() {
         const data = await res.json();
         setItems([...items, data.item]);
         setFormData({ title: "", description: "", estimatedCost: "" });
+        router.refresh();
         showNotification("¡Hito agregado exitosamente!", "success");
       } else {
         const error = await res.json();
         showNotification(`Error: ${error.error}`, "error");
       }
     } catch (error) {
-      console.error("Error adding item:", error);
+      
       showNotification("Error al agregar hito del roadmap", "error");
     } finally {
       setSaving(false);
@@ -180,13 +181,14 @@ export default function ManageRoadmapPage() {
         setItems(items.map((item) => (item.id === itemId ? data.item : item)));
         setEditingId(null);
         setFormData({ title: "", description: "", estimatedCost: "" });
+        router.refresh();
         showNotification("¡Hito actualizado exitosamente!", "success");
       } else {
         const error = await res.json();
         showNotification(`Error: ${error.error}`, "error");
       }
     } catch (error) {
-      console.error("Error updating item:", error);
+      
       showNotification("Error al actualizar hito del roadmap", "error");
     } finally {
       setSaving(false);
@@ -219,13 +221,14 @@ export default function ManageRoadmapPage() {
 
       if (res.ok) {
         setItems(items.filter((item) => item.id !== itemId));
+        router.refresh();
         showNotification("¡Hito eliminado exitosamente!", "success");
       } else {
         const error = await res.json();
         showNotification(`Error: ${error.error}`, "error");
       }
     } catch (error) {
-      console.error("Error deleting item:", error);
+      
       showNotification("Error al eliminar hito del roadmap", "error");
     }
   };

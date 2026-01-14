@@ -3,8 +3,10 @@
 import { motion } from "framer-motion";
 import { useDonation } from "@/lib/hooks/useDonation";
 import { useWallet } from "@/lib/hooks/WalletProvider";
+import { useAuth } from "@/lib/hooks/useAuth";
 import WalletConnect from "@/components/WalletConnect";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 
 interface DonationFormProps {
   projectId: string;
@@ -21,6 +23,7 @@ export default function DonationForm({
 }: DonationFormProps) {
   const t = useTranslations("donations");
   const { isConnected } = useWallet();
+  const { isAuthenticated, hasCompleteProfile, profile } = useAuth();
   const { amount, setAmount, asset, setAsset, donating, donate, canDonate } =
     useDonation();
 
@@ -41,6 +44,48 @@ export default function DonationForm({
   return (
     <div className="border-t-2 border-black pt-4 mt-4">
       <h3 className="font-bold text-sm sm:text-base mb-3">🐝 {t("donate")}</h3>
+
+      {!isAuthenticated && (
+        <div className="bg-yellow-100 border-2 border-black p-3 mb-4">
+          <p className="font-mono text-xs sm:text-sm mb-2">
+            ⚠️ Debes iniciar sesión para realizar donaciones
+          </p>
+          <Link
+            href="/login"
+            className="btn-brutal btn-brutal-primary text-xs sm:text-sm py-1.5 px-3 inline-block"
+          >
+            Iniciar sesión
+          </Link>
+        </div>
+      )}
+
+      {isAuthenticated && !hasCompleteProfile && (
+        <div className="bg-yellow-100 border-2 border-black p-3 mb-4">
+          <p className="font-mono text-xs sm:text-sm mb-2">
+            ⚠️ Debes completar tu perfil para realizar donaciones
+          </p>
+          <Link
+            href="/complete-profile"
+            className="btn-brutal btn-brutal-primary text-xs sm:text-sm py-1.5 px-3 inline-block"
+          >
+            Completar perfil
+          </Link>
+        </div>
+      )}
+
+      {isAuthenticated && hasCompleteProfile && !profile?.wallet_address && (
+        <div className="bg-yellow-100 border-2 border-black p-3 mb-4">
+          <p className="font-mono text-xs sm:text-sm mb-2">
+            ⚠️ Debes conectar una wallet a tu perfil para realizar donaciones
+          </p>
+          <Link
+            href="/profile/settings"
+            className="btn-brutal btn-brutal-primary text-xs sm:text-sm py-1.5 px-3 inline-block"
+          >
+            Configurar wallet
+          </Link>
+        </div>
+      )}
 
       <WalletConnect />
 

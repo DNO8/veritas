@@ -1,13 +1,8 @@
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
+import type { User } from "@/lib/supabase/types";
 
-export interface UserProfile {
-  id: string;
-  email: string;
-  name: string | null;
-  role: string | null;
-  wallet_address: string | null;
-}
+export type UserProfile = User;
 
 export async function getCurrentUser() {
   const {

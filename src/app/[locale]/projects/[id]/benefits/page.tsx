@@ -6,20 +6,7 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import BenefitForm from "@/components/project/BenefitForm";
 import BenefitList from "@/components/project/BenefitList";
-
-interface Benefit {
-  id: string;
-  title: string;
-  description: string;
-  benefit_type: string;
-  asset_code: string;
-  total_supply: number;
-  issued_supply: number;
-  minimum_donation: number;
-  donation_currency: string;
-  image_url?: string;
-  is_active: boolean;
-}
+import type { Benefit } from "@/lib/supabase/types";
 
 export default function ProjectBenefitsPage() {
   const params = useParams();
@@ -39,12 +26,11 @@ export default function ProjectBenefitsPage() {
     try {
       const response = await fetch(`/api/benefits?projectId=${projectId}`);
       const data = await response.json();
-      
+
       if (data.benefits) {
         setBenefits(data.benefits);
       }
     } catch (error) {
-      
     } finally {
       setLoading(false);
     }
@@ -88,17 +74,20 @@ export default function ProjectBenefitsPage() {
           >
             ← Volver
           </button>
-          
+
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+              <h1
+                className="text-4xl font-bold mb-2"
+                style={{ fontFamily: "var(--font-space-grotesk)" }}
+              >
                 🎁 Beneficios Digitales
               </h1>
               <p className="text-gray-600 font-mono">
                 Crea recompensas NFT para tus donadores
               </p>
             </div>
-            
+
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -127,10 +116,7 @@ export default function ProjectBenefitsPage() {
         )}
 
         {/* Benefits List */}
-        <BenefitList
-          benefits={benefits}
-          onUpdate={loadBenefits}
-        />
+        <BenefitList benefits={benefits} onUpdate={loadBenefits} />
 
         {/* Empty State */}
         {!loading && benefits.length === 0 && !showForm && (

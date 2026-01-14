@@ -7,6 +7,7 @@ import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import WalletConnect from "@/components/WalletConnect";
 import { useWallet } from "@/lib/hooks/WalletProvider";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { sendPayment } from "@/lib/stellar/payment";
 import { useProject } from "@/lib/hooks/useProject";
 import RecentDonations from "@/components/project/RecentDonations";
@@ -16,8 +17,11 @@ import { useNotification } from "@/components/NotificationToast";
 import { useTranslations } from "next-intl";
 import BenefitSelector from "@/components/project/BenefitSelector";
 import BenefitReceivedModal from "@/components/project/BenefitReceivedModal";
-import { buildMultipleTrustlinesTransaction, hasTrustline } from "@/lib/stellar/trustline";
-import * as StellarSdk from '@stellar/stellar-sdk';
+import {
+  buildMultipleTrustlinesTransaction,
+  hasTrustline,
+} from "@/lib/stellar/trustline";
+import * as StellarSdk from "@stellar/stellar-sdk";
 
 export default function ProjectPage() {
   const params = useParams();
@@ -41,6 +45,7 @@ export default function ProjectPage() {
   const { showNotification, NotificationContainer } = useNotification();
 
   const { isConnected, publicKey, signTransaction } = useWallet();
+  const { isAuthenticated, hasCompleteProfile, profile } = useAuth();
 
   const {
     project,
@@ -56,16 +61,15 @@ export default function ProjectPage() {
   useEffect(() => {
     const loadBenefits = async () => {
       if (!params.id) return;
-      
+
       try {
         const response = await fetch(`/api/benefits?projectId=${params.id}`);
         const data = await response.json();
-        
+
         if (data.benefits) {
           setBenefits(data.benefits.filter((b: any) => b.is_active));
         }
       } catch (error) {
-        
       } finally {
         setLoadingBenefits(false);
       }
@@ -80,16 +84,18 @@ export default function ProjectPage() {
       if (!publicKey || !params.id) return;
 
       try {
-        const response = await fetch(`/api/user/benefits?wallet=${publicKey}&projectId=${params.id}`);
+        const response = await fetch(
+          `/api/user/benefits?wallet=${publicKey}&projectId=${params.id}`,
+        );
         const data = await response.json();
 
         if (data.holdings) {
-          const benefitIds = new Set<string>(data.holdings.map((h: any) => h.benefit_id as string));
+          const benefitIds = new Set<string>(
+            data.holdings.map((h: any) => h.benefit_id as string),
+          );
           setUserHoldings(benefitIds);
         }
-      } catch (error) {
-        
-      }
+      } catch (error) {}
     };
 
     loadUserHoldings();
@@ -130,6 +136,33 @@ export default function ProjectPage() {
   };
 
   const handleDonateClick = () => {
+    if (!isAuthenticated) {
+      showNotification(
+        "Debes iniciar sesión para realizar una donación",
+        "warning",
+      );
+      router.push("/login");
+      return;
+    }
+
+    if (!hasCompleteProfile) {
+      showNotification(
+        "Debes completar tu perfil antes de realizar una donación",
+        "warning",
+      );
+      router.push("/complete-profile");
+      return;
+    }
+
+    if (!profile?.wallet_address) {
+      showNotification(
+        "Debes conectar una wallet a tu perfil para realizar donaciones",
+        "warning",
+      );
+      router.push("/profile/settings");
+      return;
+    }
+
     if (!amount || Number(amount) <= 0) {
       showNotification("Por favor ingresa un monto válido", "warning");
       return;
@@ -161,34 +194,44 @@ export default function ProjectPage() {
 
   const processDonation = async (benefitIds: string[]) => {
     if (!project || !publicKey) return;
-    
+
     setDonating(true);
 
     try {
       const networkEnv = process.env.NEXT_PUBLIC_STELLAR_NETWORK || "testnet";
       const stellarNetwork = networkEnv.toUpperCase() as "TESTNET" | "MAINNET";
-      const networkPassphrase = networkEnv === "testnet" 
-        ? StellarSdk.Networks.TESTNET 
-        : StellarSdk.Networks.PUBLIC;
+      const networkPassphrase =
+        networkEnv === "testnet"
+          ? StellarSdk.Networks.TESTNET
+          : StellarSdk.Networks.PUBLIC;
 
       // Step 1: Check and create trustlines for selected benefits
       if (benefitIds.length > 0) {
-        const trustlinesToCreate: Array<{ assetCode: string; issuerPublicKey: string }> = [];
-        
+        const trustlinesToCreate: Array<{
+          assetCode: string;
+          issuerPublicKey: string;
+        }> = [];
+
         // Get issuer account for the project
-        const issuerResponse = await fetch(`/api/projects/${project.id}/issuer`);
+        const issuerResponse = await fetch(
+          `/api/projects/${project.id}/issuer`,
+        );
         if (!issuerResponse.ok) {
           throw new Error("Failed to get issuer account");
         }
         const { issuerPublicKey } = await issuerResponse.json();
-        
+
         // Check which trustlines are needed
         for (const benefitId of benefitIds) {
-          const benefit = benefits.find(b => b.id === benefitId);
+          const benefit = benefits.find((b) => b.id === benefitId);
           if (!benefit) continue;
 
-          const hasTrust = await hasTrustline(publicKey, benefit.asset_code, issuerPublicKey);
-          
+          const hasTrust = await hasTrustline(
+            publicKey,
+            benefit.asset_code,
+            issuerPublicKey,
+          );
+
           if (!hasTrust) {
             trustlinesToCreate.push({
               assetCode: benefit.asset_code,
@@ -200,63 +243,79 @@ export default function ProjectPage() {
         // Create trustlines if needed
         if (trustlinesToCreate.length > 0) {
           showNotification(
-            `Necesitas autorizar ${trustlinesToCreate.length} trustline${trustlinesToCreate.length > 1 ? 's' : ''} para recibir beneficios. Por favor firma la transacción en tu wallet.`,
-            "info"
+            `Necesitas autorizar ${trustlinesToCreate.length} trustline${trustlinesToCreate.length > 1 ? "s" : ""} para recibir beneficios. Por favor firma la transacción en tu wallet.`,
+            "info",
           );
 
           try {
             const trustlineTx = await buildMultipleTrustlinesTransaction(
               publicKey,
-              trustlinesToCreate
+              trustlinesToCreate,
             );
 
             const trustlineXdr = trustlineTx.toXDR();
-            
-            const signedTrustlineXdr = await signTransaction(trustlineXdr, networkPassphrase);
+
+            const signedTrustlineXdr = await signTransaction(
+              trustlineXdr,
+              networkPassphrase,
+            );
 
             if (!signedTrustlineXdr) {
-              throw new Error("Trustline transaction was cancelled or not signed");
+              throw new Error(
+                "Trustline transaction was cancelled or not signed",
+              );
             }
 
             // Submit signed transaction to Stellar
-            const StellarSdk = await import('@stellar/stellar-sdk');
+            const StellarSdk = await import("@stellar/stellar-sdk");
             const server = new StellarSdk.Horizon.Server(
               networkEnv === "testnet"
-                ? 'https://horizon-testnet.stellar.org'
-                : 'https://horizon.stellar.org'
+                ? "https://horizon-testnet.stellar.org"
+                : "https://horizon.stellar.org",
             );
-            
+
             const signedTx = StellarSdk.TransactionBuilder.fromXDR(
               signedTrustlineXdr,
-              networkPassphrase
+              networkPassphrase,
             );
-            
+
             const result = await server.submitTransaction(signedTx);
-            showNotification("Trustlines autorizadas exitosamente. Esperando confirmación en la red...", "success");
-            
+            showNotification(
+              "Trustlines autorizadas exitosamente. Esperando confirmación en la red...",
+              "success",
+            );
+
             // Wait for trustline to be confirmed on Stellar network
-            await new Promise(resolve => setTimeout(resolve, 5000));
-            
+            await new Promise((resolve) => setTimeout(resolve, 5000));
+
             // Verify trustline was created
             let trustlineConfirmed = false;
             for (let i = 0; i < 3; i++) {
-              const hasTrust = await hasTrustline(publicKey, trustlinesToCreate[0].assetCode, trustlinesToCreate[0].issuerPublicKey);
+              const hasTrust = await hasTrustline(
+                publicKey,
+                trustlinesToCreate[0].assetCode,
+                trustlinesToCreate[0].issuerPublicKey,
+              );
               if (hasTrust) {
                 trustlineConfirmed = true;
                 break;
               }
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              await new Promise((resolve) => setTimeout(resolve, 2000));
             }
-            
+
             if (!trustlineConfirmed) {
               // Trustline not confirmed yet, but proceeding anyway
             }
-            
-            showNotification("Trustline confirmada. Ahora procederemos con la donación.", "success");
-            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            showNotification(
+              "Trustline confirmada. Ahora procederemos con la donación.",
+              "success",
+            );
+            await new Promise((resolve) => setTimeout(resolve, 1000));
           } catch (trustlineError) {
-            
-            throw new Error(`No se pudieron crear las trustlines: ${trustlineError instanceof Error ? trustlineError.message : 'Error desconocido'}`);
+            throw new Error(
+              `No se pudieron crear las trustlines: ${trustlineError instanceof Error ? trustlineError.message : "Error desconocido"}`,
+            );
           }
         }
       }
@@ -302,16 +361,15 @@ export default function ProjectPage() {
 
       // If benefits were issued, show the modal
       if (benefitsIssued > 0 && benefitIds.length > 0) {
-        const issuedBenefits = benefits.filter(b => benefitIds.includes(b.id));
+        const issuedBenefits = benefits.filter((b) =>
+          benefitIds.includes(b.id),
+        );
         setReceivedBenefits(issuedBenefits);
         setDonationTxHash(result.hash);
         setShowBenefitReceived(true);
       } else {
-        showNotification(
-          `¡Donación exitosa! ${amount} ${asset}`,
-          "success",
-        );
-        
+        showNotification(`¡Donación exitosa! ${amount} ${asset}`, "success");
+
         // Reload after a short delay
         setTimeout(() => {
           window.location.reload();
@@ -356,7 +414,7 @@ export default function ProjectPage() {
   return (
     <>
       {NotificationContainer}
-      
+
       {/* Benefit Selector Modal */}
       <AnimatePresence>
         {showBenefitSelector && project && (
@@ -701,9 +759,9 @@ export default function ProjectPage() {
                         {/* Imagen Circular POAP */}
                         {benefit.image_url && (
                           <div className="relative flex items-center justify-center p-6 bg-gray-50">
-                            <div 
+                            <div
                               className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-black overflow-hidden bg-white"
-                              style={{ boxShadow: '6px 6px 0px #000000' }}
+                              style={{ boxShadow: "6px 6px 0px #000000" }}
                             >
                               <img
                                 src={benefit.image_url}
@@ -732,12 +790,19 @@ export default function ProjectPage() {
                           {/* Stats */}
                           <div className="grid grid-cols-2 gap-2 mb-3">
                             <div className="bg-[#FDCB6E] border-2 border-black p-2">
-                              <p className="text-xs font-mono text-gray-700">Min. Donación</p>
-                              <p className="font-bold font-mono text-sm">{benefit.minimum_donation} {benefit.donation_currency || 'USDC'}</p>
+                              <p className="text-xs font-mono text-gray-700">
+                                Min. Donación
+                              </p>
+                              <p className="font-bold font-mono text-sm">
+                                {benefit.minimum_donation}{" "}
+                                {benefit.donation_currency || "USDC"}
+                              </p>
                             </div>
                             <div className="bg-[#E67E22] border-2 border-black p-2 text-white">
                               <p className="text-xs font-mono">Disponibles</p>
-                              <p className="font-bold font-mono text-sm">{benefit.total_supply - benefit.issued_supply}</p>
+                              <p className="font-bold font-mono text-sm">
+                                {benefit.total_supply - benefit.issued_supply}
+                              </p>
                             </div>
                           </div>
 
@@ -745,7 +810,9 @@ export default function ProjectPage() {
                           <div className="mb-2">
                             <div className="flex justify-between text-xs font-mono mb-1">
                               <span>Emitidos</span>
-                              <span>{benefit.issued_supply} / {benefit.total_supply}</span>
+                              <span>
+                                {benefit.issued_supply} / {benefit.total_supply}
+                              </span>
                             </div>
                             <div className="w-full h-2 border-2 border-black bg-white">
                               <div

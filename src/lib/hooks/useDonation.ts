@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useWallet } from "./WalletProvider";
+import { useAuth } from "./useAuth";
 import { sendPayment } from "@/lib/stellar/payment";
 
 export function useDonation() {
   const { isConnected, publicKey, signTransaction } = useWallet();
+  const { isAuthenticated, hasCompleteProfile, profile } = useAuth();
   const [donating, setDonating] = useState(false);
   const [amount, setAmount] = useState("");
   const [asset, setAsset] = useState<"XLM" | "USDC">("XLM");
@@ -15,6 +17,22 @@ export function useDonation() {
     projectTitle: string,
     destinationWallet: string,
   ) => {
+    if (!isAuthenticated) {
+      throw new Error("Debes iniciar sesión para realizar una donación");
+    }
+
+    if (!hasCompleteProfile) {
+      throw new Error(
+        "Debes completar tu perfil antes de realizar una donación",
+      );
+    }
+
+    if (!profile?.wallet_address) {
+      throw new Error(
+        "Debes conectar una wallet a tu perfil para realizar donaciones",
+      );
+    }
+
     if (!amount || Number(amount) <= 0) {
       throw new Error("Please enter a valid amount");
     }
@@ -85,6 +103,13 @@ export function useDonation() {
     donating,
     donate,
     reset,
-    canDonate: isConnected && !!publicKey && !!amount && Number(amount) > 0,
+    canDonate:
+      isAuthenticated &&
+      hasCompleteProfile &&
+      !!profile?.wallet_address &&
+      isConnected &&
+      !!publicKey &&
+      !!amount &&
+      Number(amount) > 0,
   };
 }

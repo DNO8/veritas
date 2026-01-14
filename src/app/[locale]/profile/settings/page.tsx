@@ -8,14 +8,7 @@ import { supabase } from "@/lib/supabase/client";
 import LoadingBee from "@/components/LoadingBee";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
 import { useNotification } from "@/components/NotificationToast";
-
-interface UserProfile {
-  id: string;
-  email: string;
-  name: string | null;
-  role: string;
-  wallet_address: string | null;
-}
+import type { UserProfile } from "@/lib/auth/routeProtection";
 
 export default function ProfileSettingsPage() {
   const router = useRouter();
@@ -53,7 +46,6 @@ export default function ProfileSettingsPage() {
           setName(profile.name || "");
         }
       } catch (error) {
-        
       } finally {
         setLoading(false);
       }
@@ -78,7 +70,6 @@ export default function ProfileSettingsPage() {
       setMessage({ type: "success", text: "Perfil actualizado correctamente" });
       setUser({ ...user, name });
     } catch (error) {
-      
       setMessage({ type: "error", text: "Error al actualizar el perfil" });
     } finally {
       setSaving(false);

@@ -7,17 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import Logo from "@/components/Logo";
 import { supabase } from "@/lib/supabase/client";
 import gsap from "gsap";
-
-interface Project {
-  id: string;
-  title: string;
-  short_description: string;
-  cover_image_url: string;
-  current_amount: number;
-  goal_amount: number;
-  category: string | null;
-  status: string;
-}
+import type { Project } from "@/lib/supabase/types";
 
 const CATEGORY_ICONS: Record<string, string> = {
   all: "🌐",
@@ -99,7 +89,6 @@ export default function Home() {
           setFilteredProjects(data as Project[]);
         }
       } catch (error) {
-        
       } finally {
         setLoading(false);
       }

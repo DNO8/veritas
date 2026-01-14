@@ -8,43 +8,15 @@ import { supabase } from "@/lib/supabase/client";
 import Logo from "@/components/Logo";
 import LoadingBee from "@/components/LoadingBee";
 import UserBenefits from "@/components/user/UserBenefits";
-
-interface UserProfile {
-  id: string;
-  email: string;
-  name: string | null;
-  role: string;
-  wallet_address: string | null;
-  created_at: string;
-}
-
-interface Project {
-  id: string;
-  title: string;
-  short_description: string;
-  cover_image_url: string;
-  status: string;
-  current_amount: number;
-  goal_amount: number;
-}
-
-interface Donation {
-  id: string;
-  amount: string;
-  asset: string;
-  created_at: string;
-  project: {
-    id: string;
-    title: string;
-  };
-}
+import type { UserProfile } from "@/lib/auth/routeProtection";
+import type { Project, DonationWithProject } from "@/lib/supabase/types";
 
 export default function ProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [donations, setDonations] = useState<Donation[]>([]);
+  const [donations, setDonations] = useState<DonationWithProject[]>([]);
   const [totalDonated, setTotalDonated] = useState(0);
 
   useEffect(() => {
@@ -99,16 +71,15 @@ export default function ProfilePage() {
             .limit(10);
 
           if (userDonations) {
-            setDonations(userDonations as Donation[]);
-            const total = (userDonations as Donation[]).reduce(
-              (sum, d) => sum + parseFloat(d.amount),
+            setDonations(userDonations as DonationWithProject[]);
+            const total = (userDonations as DonationWithProject[]).reduce(
+              (sum, d) => sum + d.amount,
               0,
             );
             setTotalDonated(total);
           }
         }
       } catch (error) {
-        
       } finally {
         setLoading(false);
       }
@@ -410,8 +381,7 @@ export default function ProfilePage() {
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="font-bold text-[#E67E22]">
-                          {parseFloat(donation.amount).toFixed(2)}{" "}
-                          {donation.asset}
+                          {donation.amount.toFixed(2)} {donation.asset}
                         </p>
                         <p className="text-sm text-gray-500">
                           {donation.project?.title || "Proyecto"}
@@ -437,7 +407,9 @@ export default function ProfilePage() {
             className="mt-8"
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">🎁 MIS BENEFICIOS DIGITALES</h2>
+              <h2 className="text-2xl font-bold">
+                🎁 MIS BENEFICIOS DIGITALES
+              </h2>
             </div>
             <UserBenefits walletAddress={user.wallet_address} />
           </motion.div>
